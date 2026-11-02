@@ -58,7 +58,7 @@ export const App: React.FC = () => {
 
         <div className="banner">
           <div className="banner-title">
-            Phase 1 Foundation Active &bull; Human-in-the-Loop Decision Support
+            Phase 6 Verified &bull; Human-in-the-Loop Decision Support
           </div>
           <div className="banner-body">
             AuditLens is strictly an advisory decision-support system. It will not execute automated account freezes, decline transactions autonomously, or file suspicious activity reports without an analyst's review.
@@ -90,9 +90,9 @@ export const App: React.FC = () => {
 
               <div className="card">
                 <div className="card-title">Phase Gate</div>
-                <div className="card-value">Phase 1</div>
+                <div className="card-value">Phase 6</div>
                 <div className="card-description">
-                  <span className="status-badge pass">FOUNDATION VERIFIED</span>
+                  <span className="status-badge pass">EXPLAINABILITY VERIFIED</span>
                 </div>
               </div>
             </div>
@@ -116,16 +116,36 @@ export const App: React.FC = () => {
                   <tr style={{ borderBottom: '1px solid rgba(51, 65, 85, 0.4)' }}>
                     <td style={{ padding: '0.75rem 0' }}>Dataset Acquisition & Validation</td>
                     <td style={{ padding: '0.75rem 0' }}>Phase 2</td>
-                    <td style={{ padding: '0.75rem 0' }}><span className="status-badge pending">PENDING</span></td>
+                    <td style={{ padding: '0.75rem 0' }}><span className="status-badge pass">READY</span></td>
                   </tr>
                   <tr style={{ borderBottom: '1px solid rgba(51, 65, 85, 0.4)' }}>
                     <td style={{ padding: '0.75rem 0' }}>Exploratory Data Analysis & Preprocessing</td>
                     <td style={{ padding: '0.75rem 0' }}>Phase 3</td>
-                    <td style={{ padding: '0.75rem 0' }}><span className="status-badge pending">PENDING</span></td>
+                    <td style={{ padding: '0.75rem 0' }}><span className="status-badge pass">READY</span></td>
                   </tr>
                   <tr style={{ borderBottom: '1px solid rgba(51, 65, 85, 0.4)' }}>
                     <td style={{ padding: '0.75rem 0' }}>Baseline Machine Learning Models</td>
                     <td style={{ padding: '0.75rem 0' }}>Phase 4</td>
+                    <td style={{ padding: '0.75rem 0' }}><span className="status-badge pass">READY</span></td>
+                  </tr>
+                  <tr style={{ borderBottom: '1px solid rgba(51, 65, 85, 0.4)' }}>
+                    <td style={{ padding: '0.75rem 0' }}>Model Evaluation & Threshold Optimization</td>
+                    <td style={{ padding: '0.75rem 0' }}>Phase 5</td>
+                    <td style={{ padding: '0.75rem 0' }}><span className="status-badge pass">READY</span></td>
+                  </tr>
+                  <tr style={{ borderBottom: '1px solid rgba(51, 65, 85, 0.4)' }}>
+                    <td style={{ padding: '0.75rem 0' }}>Explainability & Analyst-Facing Evidence (SHAP)</td>
+                    <td style={{ padding: '0.75rem 0' }}>Phase 6</td>
+                    <td style={{ padding: '0.75rem 0' }}><span className="status-badge pass">READY</span></td>
+                  </tr>
+                  <tr style={{ borderBottom: '1px solid rgba(51, 65, 85, 0.4)' }}>
+                    <td style={{ padding: '0.75rem 0' }}>Backend API & Case Management</td>
+                    <td style={{ padding: '0.75rem 0' }}>Phase 7</td>
+                    <td style={{ padding: '0.75rem 0' }}><span className="status-badge pending">PENDING APPROVAL</span></td>
+                  </tr>
+                  <tr style={{ borderBottom: '1px solid rgba(51, 65, 85, 0.4)' }}>
+                    <td style={{ padding: '0.75rem 0' }}>Dashboard & Analyst Workflow UI</td>
+                    <td style={{ padding: '0.75rem 0' }}>Phase 8</td>
                     <td style={{ padding: '0.75rem 0' }}><span className="status-badge pending">PENDING</span></td>
                   </tr>
                 </tbody>
@@ -147,7 +167,7 @@ export const App: React.FC = () => {
       </main>
 
       <footer className="footer">
-        AuditLens &bull; Financial Anomaly &amp; Fraud Investigation Copilot &bull; Phase 1 Local Skeleton
+        AuditLens &bull; Financial Anomaly &amp; Fraud Investigation Copilot &bull; Phase 6 Verified
       </footer>
     </div>
   );

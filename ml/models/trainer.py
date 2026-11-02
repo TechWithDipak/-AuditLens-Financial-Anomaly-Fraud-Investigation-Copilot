@@ -137,3 +137,28 @@ def train_baseline_models(
     results["evaluation_report_path"] = str(eval_file)
 
     return results
+
+
+if __name__ == "__main__":
+    import argparse
+
+    parser = argparse.ArgumentParser(description="Train baseline models for AuditLens.")
+    parser.add_argument(
+        "--data",
+        type=str,
+        default="data/sample/synthetic_creditcard_sample.csv",
+        help="Path to training CSV",
+    )
+    parser.add_argument(
+        "--output-dir",
+        type=str,
+        default="models",
+        help="Output directory for model artifacts",
+    )
+    args = parser.parse_args()
+
+    print(f"[*] Training baseline models from {args.data}...")
+    report = train_baseline_models(args.data, output_dir=args.output_dir)
+    print(f"[+] Baseline models successfully saved to {args.output_dir}/")
+    print(f"[+] Baseline metrics: {report.get('baseline_metrics')}")
+
