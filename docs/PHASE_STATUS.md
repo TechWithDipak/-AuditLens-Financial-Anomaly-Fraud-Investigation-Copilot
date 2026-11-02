@@ -1,33 +1,33 @@
-# Phase 4 — Baseline Machine-Learning Models
+# Phase 6 — Explainability and Analyst-Facing Evidence
 
 ## Changes made
-- Created baseline models architecture in `ml/models/`:
-  - `ml/models/base.py`: Defined `PredictionRecord` ensuring strict decoupling between unsupervised anomaly scores and supervised fraud probabilities. Defined `ModelMetadata` for full provenance and hyperparameter tracking.
-  - `ml/models/anomaly.py`: Implemented `IsolationForestAnomalyDetector` (`iso_forest_v0.1.0`), fitting strictly on unlabeled preprocessed features with continuous normalized $[0.0, 1.0]$ score output and binary outlier flags.
-  - `ml/models/classifier.py`: Implemented `LogisticRegressionFraudClassifier` (`logreg_v0.1.0`) with `class_weight='balanced'`, predicting calibrated continuous fraud probabilities $P(\text{Class}=1 \mid X) \in [0.0, 1.0]$.
-  - `ml/models/trainer.py`: Implemented automated training pipeline executing dataset loading, stratified splitting, preprocessing fit, model training, held-out test evaluation, and artifact serialization.
-  - `ml/models/inference.py`: Implemented `AuditLensInferenceEngine` supporting batch and single-transaction scoring with input validation and typed prediction contracts.
-- Persisted baseline model artifacts in `models/` with companion JSON metadata:
-  - `models/isolation_forest.joblib` and `models/isolation_forest.json`
-  - `models/logistic_regression.joblib` and `models/logistic_regression.json`
-  - `models/preprocessor.joblib` and `models/preprocessor.json`
-  - `models/baseline_evaluation.json`
-- Documented model architectures, intended decision-support usage, feature inputs, and baseline metrics in `docs/MODEL_CARD.md`.
-- Implemented comprehensive unit and integration test suite across anomaly detector, supervised classifier, inference engine, and trainer.
+- Implemented explainability data contracts in `ml/explainability/schemas.py`:
+  - `FeatureContribution`: Encapsulates individual feature attributions, signed directional indicators (`increases_risk`, `decreases_risk`, `neutral`), raw/transformed values, relative normalized magnitudes, and non-causal descriptions.
+  - `TransactionExplanation`: Encapsulates full transaction explanation report containing model metadata (name, version), prediction score, score type (`fraud_probability` vs `anomaly_score`), threshold, base expected value, top-$k$ contributions, all feature contributions, plain-language summary, and regulatory disclaimers/caveats.
+  - `GlobalFeatureImportance`: Encapsulates model-wide feature ranking and importance metrics.
+- Implemented explainability engine `AuditLensExplainer` in `ml/explainability/explainer.py`:
+  - Native SHAP integration with model-specific explainers: `shap.LinearExplainer` for linear models (`LogisticRegressionFraudClassifier`), `shap.TreeExplainer` for tree ensembles (`RandomForestFraudClassifier`).
+  - Robust mathematical fallback attribution engine using standardized feature deviations when SHAP is disabled or unsupported.
+  - Transparent anomaly detector explanation: attributes isolation forest anomaly scores by measuring feature divergence from expected normal background centroids.
+  - Plain-language non-causal descriptions enforcing strict compliance guidelines: phrases state that features "increased/decreased model score" rather than claiming "proof of fraud" or "guilt".
+  - Metadata and operational guardrails: every explanation attaches the exact model version, decision threshold, scoring timestamp, and standard regulatory caveats.
+  - Global feature importance computation across model coefficients or tree importance vectors.
+  - Batch explanation method `explain_batch` for high-throughput batch auditing.
+- Implemented unit tests in `tests/ml/test_explainability.py` (8 test cases):
+  - Linear model SHAP explanations and signed attribution validation.
+  - Random Forest tree SHAP explanations.
+  - Deterministic fallback attribution when SHAP is disabled.
+  - Isolation Forest anomaly score explanation.
+  - Schema validation rejecting inputs missing required features.
+  - Global feature importance ordering.
+  - Batch transaction explanation consistency.
+  - Determinism across repeated explanation evaluations on identical inputs.
 
 ## Files created or modified
-- `models/.gitkeep`
-- `docs/MODEL_CARD.md`
-- `ml/models/__init__.py`
-- `ml/models/base.py`
-- `ml/models/anomaly.py`
-- `ml/models/classifier.py`
-- `ml/models/trainer.py`
-- `ml/models/inference.py`
-- `tests/ml/test_anomaly_model.py`
-- `tests/ml/test_classifier_model.py`
-- `tests/ml/test_inference_engine.py`
-- `tests/ml/test_trainer.py`
+- `ml/explainability/__init__.py`
+- `ml/explainability/schemas.py`
+- `ml/explainability/explainer.py`
+- `tests/ml/test_explainability.py`
 - `docs/project-memory/02_EXECUTION_LOG.md`
 - `docs/project-memory/03_LESSONS_LEARNED.md`
 - `docs/PHASE_STATUS.md`
@@ -35,24 +35,25 @@
 ## Verification performed
 | Check | Command / Method | Result |
 |---|---|---|
-| Backend & ML Unit tests | `.venv/bin/pytest -v` | **PASS** (58 passed in 1.74s) |
-| Backend & ML Linting | `.venv/bin/ruff check backend ml tests` | **PASS** (All checks passed) |
+| Full backend & ML test suite | `.venv/bin/pytest -v` | **PASS** (74 passed in 2.66s) |
+| Backend & ML Linting & Formatting | `.venv/bin/ruff check backend ml tests && .venv/bin/ruff format --check backend ml tests` | **PASS** (Zero errors) |
 | Frontend tests & build | `cd frontend && npm test && npm run lint && npm run build` | **PASS** (Zero regression) |
-| Anomaly score bounds test | `test_fit_and_score_transactions` | **PASS** (Scores strictly in $[0.0, 1.0]$) |
-| Classifier probability test | `test_fit_and_predict_probabilities` | **PASS** (Probabilities strictly in $[0.0, 1.0]$) |
-| Score decoupling contract test | `test_inference_engine_from_directory` | **PASS** (`anomaly_score` and `fraud_probability` verified as separate fields) |
-| Artifact persistence reproducibility | `test_anomaly_model_save_and_load_reproducibility`, `test_classifier_save_and_load_reproducibility` | **PASS** (Exact bit-for-bit prediction match on reload) |
-| Missing feature rejection test | `test_inference_engine_rejects_missing_features` | **PASS** (ValueError raised on incomplete feature vectors) |
-| End-to-end training pipeline test | `test_train_baseline_models_pipeline` | **PASS** (Artifacts generated, baseline metrics recorded) |
-| Model artifact git isolation | `git status -s --ignored models/` | **PASS** (Large `.joblib` artifacts ignored by Git) |
+| Linear explainer test | `test_linear_explainer_transaction` | **PASS** (Signed contributions, score in $[0.0, 1.0]$, disclaimers attached) |
+| Tree explainer test | `test_tree_explainer_random_forest` | **PASS** (TreeExplainer runs, generates 31 feature attributions) |
+| Fallback attribution test | `test_fallback_attribution_when_shap_disabled` | **PASS** (Runs without SHAP, top 5 features extracted) |
+| Anomaly explanation test | `test_anomaly_detector_explanation` | **PASS** (Attributes Isolation Forest score correctly as `anomaly_score`) |
+| Missing feature rejection | `test_explainer_rejects_missing_features` | **PASS** (Rejects missing columns with clear `ValueError`) |
+| Global feature ranking | `test_global_feature_importance` | **PASS** (Sorted descending by global attribution weight) |
+| Batch explanation test | `test_explain_batch` | **PASS** (All rows in batch explained) |
+| Determinism test | `test_explain_tp_fp_tn_cases_and_determinism` | **PASS** (Exact reproducible scores & attributions on repeated runs) |
 
 ## Issues and limitations
-- Logistic Regression is a linear classifier; non-linear models (e.g. Random Forest or gradient-boosted trees) and detailed operational threshold curves are deferred to Phase 5.
-- Isolation Forest scores represent statistical distance, not proven fraud.
+- For PCA-transformed columns `V1`–`V28`, feature explanations provide mathematical directional evidence (e.g. `V14 = -4.21 increased model score by +0.32`) rather than human-domain business semantics (e.g. merchant type). In production systems with un-anonymized features, semantic feature dictionaries will map raw feature names to human-readable domain descriptors.
+- Explanations are strictly decision-support aids and do not constitute legal proof of fraud or regulatory culpability.
 
 ## Exit gate
 **PASS**
 
 ## Next phase
-Phase 5 — Model evaluation, comparison, and threshold selection.
+Phase 7 — Backend API and Case Management.
 Do not begin until the user explicitly approves.

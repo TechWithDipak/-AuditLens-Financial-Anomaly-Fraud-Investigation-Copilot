@@ -61,3 +61,24 @@ Continuous record of technical discoveries, potential edge cases, mistakes made,
 - **Discovery**: Raw Isolation Forest `score_samples()` produces unnormalized negative values (e.g. $[-0.7, -0.3]$). Exposing raw negative scores to analysts creates confusion regarding threshold calibration.
   - *Fix*: Calibrated baseline score bounds during `fit()` and normalized inference outputs to $[0.0, 1.0]$ where 1.0 represents the highest anomaly severity.
   - *Prevention Rule*: Always normalize unsupervised anomaly outputs to a standardized $[0.0, 1.0]$ severity scale while explicitly clarifying that this is an outlier metric, not a probability of guilt.
+
+---
+
+### Phase 5: Model Evaluation, Comparison, and Threshold Selection
+- **Discovery**: Naive majority classification (predicting non-fraud for all transactions) achieves over 93% accuracy on our test partition while delivering 0.0 recall and 0.067 PR-AUC (completely missing every fraud event).
+  - *Fix*: Excluded raw accuracy from model selection criteria and established PR-AUC / Average Precision as the primary objective.
+  - *Prevention Rule*: In fraud systems with $< 1\%$ positive rates, never report accuracy without pairing it with PR-AUC, confusion matrices, and recall at operational review thresholds.
+- **Discovery**: Default decision threshold (0.5) is rarely optimal under severe class imbalance, especially when balanced class weighting shifts the predicted probability distribution.
+  - *Fix*: Implemented `find_optimal_threshold()` to dynamically compute cutoffs targeting explicit operational triage budgets (e.g. F1 maximization or bounded analyst alert capacity).
+  - *Prevention Rule*: Always expose configurable decision thresholds so compliance teams can tune false positive alert volume according to investigator review capacity.
+
+
+---
+
+### Phase 6: Explainability and Analyst-Facing Evidence
+- **Discovery**: When using `shap.LinearExplainer` with scikit-learn Logistic Regression in Python 3.13, passing a background dataset directly without specifying an explicit masker produces a `FutureWarning` concerning `feature_perturbation`.
+  - *Fix*: Documented the warning and implemented both native SHAP and robust fallback attribution engines to insulate production deployments against upstream SHAP internal API shifts.
+  - *Prevention Rule*: In production ML explainability architectures, always implement a deterministic mathematical fallback attribution strategy (e.g. standardized feature deviation or gradient product) alongside SHAP libraries so explanations remain available if a C-extension or explainer initialization fails.
+- **Discovery**: In regulatory contexts, describing a high SHAP value as "this transaction is fraud because of V14" violates non-causal compliance standards and can mislead compliance auditors.
+  - *Fix*: Standardized all plain-text explanations to non-causal statistical language ("V14 = -4.21 increased model score by +0.32" rather than "caused fraud") and attached mandatory caveats stating explanations represent statistical correlations rather than legal proof of intent.
+  - *Prevention Rule*: Hardcode standard disclaimers directly into explainability payload contracts so downstream web and PDF reporting layers cannot omit regulatory guardrails.

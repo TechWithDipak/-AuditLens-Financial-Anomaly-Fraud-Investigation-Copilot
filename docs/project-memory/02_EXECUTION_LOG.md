@@ -308,3 +308,99 @@
 
 #### Deviations from Plan:
 - None.
+
+
+---
+
+### Phase 5: Model Evaluation, Comparison, and Threshold Selection
+- **Date**: 2026-11-02
+- **Status**: Completed (PASS)
+- **Goal**: Evaluate models on held-out test splits using imbalanced classification metrics (PR-AUC, ROC-AUC, F1, precision, recall, confusion matrix), benchmark multiple models against naive baselines, analyze false positive and false negative error patterns, calibrate operational review thresholds, and document academic caveats.
+
+#### Actions & Commands Executed:
+1. Implemented `RandomForestFraudClassifier` in `ml/models/random_forest.py` (`rf_v0.1.0`) with balanced class weighting to provide a non-linear comparison candidate.
+2. Implemented `ml/evaluation/metrics.py`:
+   - `calculate_classification_metrics`: Computes precision, recall, F1, PR-AUC (Average Precision), ROC-AUC, FPR, FNR, specificity, confusion matrix (TP, FP, TN, FN).
+   - `calculate_threshold_curve`: Evaluates decision trade-offs across 19 threshold steps (0.05 to 0.95).
+   - `find_optimal_threshold`: Optimizes decision threshold based on business criteria (`f1`, `recall_at_precision`, `precision_at_recall`).
+3. Implemented `ml/evaluation/comparison.py`:
+   - `evaluate_model_suite`: Evaluates Naive Majority, Isolation Forest, Logistic Regression, and Random Forest on held-out test data.
+   - `analyze_prediction_errors`: Extracts and ranks top False Positives and top False Negatives with characteristic feature attributes.
+4. Implemented `ml/evaluation/reporter.py`:
+   - `format_evaluation_markdown`: Generates comprehensive markdown document.
+   - `save_evaluation_reports`: Saves `docs/EVALUATION_REPORT.md` and `models/evaluation_comparison.json`.
+5. Created unit tests in `tests/ml/test_evaluation.py`:
+   - Tested metric calculations against hand-verified truth matrix (TP=1, FP=1, TN=1, FN=1 -> F1=0.5).
+   - Tested edge cases (perfect predictions, all-zero naive predictions).
+   - Tested threshold curve monotonicity.
+   - Tested threshold optimization finding F1-maximizing cutoff.
+   - Tested Random Forest classifier fit, predict, and persistence.
+   - Tested error analysis isolating False Positives and False Negatives.
+   - Tested markdown and JSON report generation.
+6. Executed `.venv/bin/pytest -v` and `.venv/bin/ruff check backend ml tests`:
+   - *Result*: 66 passed in 2.27s; all checks passed.
+7. Executed frontend verification:
+   - *Result*: 2 frontend tests passed; lint clean; build succeeded in 239ms.
+
+#### Files Created / Modified:
+- `ml/models/random_forest.py`
+- `ml/models/__init__.py`
+- `ml/evaluation/__init__.py`
+- `ml/evaluation/metrics.py`
+- `ml/evaluation/comparison.py`
+- `ml/evaluation/reporter.py`
+- `docs/EVALUATION_REPORT.md`
+- `tests/ml/test_evaluation.py`
+- `docs/project-memory/02_EXECUTION_LOG.md`
+- `docs/project-memory/03_LESSONS_LEARNED.md`
+- `docs/PHASE_STATUS.md`
+
+#### Deviations from Plan:
+- None.
+
+---
+
+### Phase 6: Explainability and Analyst-Facing Evidence
+- **Date**: 2026-11-02
+- **Status**: Completed (PASS)
+- **Goal**: Provide transparent, analyst-inspectable feature attributions and evidence for model scores (using SHAP and fallback heuristics), distinguish global importance from instance explanations, enforce non-causal language, attach model metadata, and surface clear regulatory caveats.
+
+#### Actions & Commands Executed:
+1. Installed `shap` (`0.54.1`) in Python virtual environment (`.venv`).
+2. Implemented `ml/explainability/schemas.py`:
+   - `FeatureContribution`: Encapsulates feature attributions, signed directional indicators (`increases_risk`, `decreases_risk`, `neutral`), raw/transformed values, relative magnitudes, and non-causal descriptions.
+   - `TransactionExplanation`: Encapsulates full transaction report with model metadata, score type (`fraud_probability` vs `anomaly_score`), prediction score, threshold, base expected value, top-$k$ contributions, summary text, and disclaimers.
+   - `GlobalFeatureImportance`: Encapsulates global feature importance vectors and rankings.
+3. Implemented `ml/explainability/explainer.py`:
+   - `AuditLensExplainer`: Architecture-aware explainability service.
+   - Integrated `shap.LinearExplainer` for regularized logistic regression and `shap.TreeExplainer` for random forest ensemble.
+   - Built mathematical fallback attribution using normalized feature divergence from expected means when SHAP is disabled.
+   - Built anomaly score attribution for Isolation Forest measuring feature deviations from normal reference distributions.
+   - Guarded language: enforces non-causal descriptions ("increased model score by +X" rather than "caused fraud" or "guilty").
+   - Attached required audit metadata (model name, version, timestamp, threshold, score type) and standard compliance caveats.
+   - Implemented `get_global_feature_importance` and `explain_batch`.
+4. Implemented `tests/ml/test_explainability.py` (8 test cases):
+   - Linear explainer transaction explanations and signed contributions.
+   - Random Forest tree SHAP explanations.
+   - Deterministic fallback attribution when SHAP is disabled.
+   - Isolation Forest anomaly score explanation.
+   - Schema validation rejecting inputs missing required feature columns.
+   - Global feature importance ordering.
+   - Batch transaction explanation consistency.
+   - Determinism across repeated explanation evaluations on identical inputs.
+5. Executed test and lint verification:
+   - `.venv/bin/pytest -v`: All 74 tests passed in 2.66s.
+   - `.venv/bin/ruff check backend ml tests && .venv/bin/ruff format --check backend ml tests`: Zero lint errors, perfectly formatted.
+   - Frontend test, lint, and build: 2 tests passed, bundle built cleanly in 241ms.
+
+#### Files Created / Modified:
+- `ml/explainability/__init__.py`
+- `ml/explainability/schemas.py`
+- `ml/explainability/explainer.py`
+- `tests/ml/test_explainability.py`
+- `docs/project-memory/02_EXECUTION_LOG.md`
+- `docs/project-memory/03_LESSONS_LEARNED.md`
+- `docs/PHASE_STATUS.md`
+
+#### Deviations from Plan:
+- None.
