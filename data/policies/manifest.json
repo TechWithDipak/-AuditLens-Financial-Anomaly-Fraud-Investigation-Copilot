@@ -1,0 +1,51 @@
+{
+  "version": "1.0.0",
+  "last_updated": "2026-11-03",
+  "documents": [
+    {
+      "id": "FIN-2021-A003",
+      "title": "FinCEN Advisory on Elder Financial Exploitation",
+      "issuing_body": "Financial Crimes Enforcement Network (FinCEN)",
+      "jurisdiction": "United States",
+      "publication_date": "2021-06-15",
+      "filename": "FIN-2021-A003_elder_financial_exploitation.md",
+      "source_url": "https://www.fincen.gov/resources/advisories/fincen-advisory-fin-2021-a003",
+      "license": "U.S. Public Domain (U.S. Government Work)",
+      "description": "Guidance on identifying behavioral and transactional red flags associated with elder financial exploitation and filing Suspicious Activity Reports (SARs)."
+    },
+    {
+      "id": "FATF-2023-RED-FLAGS",
+      "title": "FATF Red Flag Indicators of Money Laundering and Terrorist Financing",
+      "issuing_body": "Financial Action Task Force (FATF)",
+      "jurisdiction": "International",
+      "publication_date": "2023-07-20",
+      "filename": "FATF_red_flag_indicators_money_laundering.md",
+      "source_url": "https://www.fatf-gafi.org/en/publications/Methodsandtrends/red-flag-indicators.html",
+      "license": "FATF Public Document",
+      "description": "International red flag indicators for structuring, rapid movement of funds, uncharacteristic transaction volumes, and pass-through account anomalies."
+    },
+    {
+      "id": "FFIEC-BSA-AML-SARS",
+      "title": "FFIEC BSA/AML Examination Manual: Suspicious Activity Reporting",
+      "issuing_body": "Federal Financial Institutions Examination Council (FFIEC)",
+      "jurisdiction": "United States",
+      "publication_date": "2021-02-25",
+      "filename": "FFIEC_bsa_aml_examination_manual_sars.md",
+      "source_url": "https://bsaaml.ffiec.gov/manual/AssessingComplianceWithBSARegulatoryRequirements/06",
+      "license": "U.S. Public Domain (FFIEC)",
+      "description": "Regulatory standards governing SAR filing timing thresholds (30-day requirement), documentation retention standards, and strict statutory prohibition against tipping off."
+    },
+    {
+      "id": "FIN-2020-A001",
+      "title": "FinCEN Advisory on Ransomware and Cyber-Extortion Facilitation",
+      "issuing_body": "Financial Crimes Enforcement Network (FinCEN)",
+      "jurisdiction": "United States",
+      "publication_date": "2020-10-01",
+      "filename": "FIN-2020-A001_ransomware_cyber_extortion.md",
+      "source_url": "https://www.fincen.gov/resources/advisories/fincen-advisory-fin-2020-a001",
+      "license": "U.S. Public Domain (U.S. Government Work)",
+      "description": "Identifies financial indicators associated with cyber-extortion, ransomware payments, rapid conversion of fiat to convertible virtual currency, and mixing services."
+    }
+  ]
+}
+

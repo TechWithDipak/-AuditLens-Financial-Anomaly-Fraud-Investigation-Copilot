@@ -404,3 +404,195 @@
 
 #### Deviations from Plan:
 - None.
+
+
+---
+
+### Phase 7: Backend API and Case Management
+- **Date**: 2026-11-03
+- **Status**: Completed (PASS)
+- **Goal**: Expose validated data and ML scoring functionality through stable REST APIs, persist investigation cases and notes, maintain an immutable audit trail, provide pagination and filtering, and enforce decision-support boundaries.
+
+#### Actions & Commands Executed:
+1. Updated `backend/requirements.txt` with `sqlalchemy>=2.0.0,<3.0.0` and installed `sqlalchemy-2.1.6`.
+2. Implemented database persistence layer in `backend/app/db/`:
+   - `session.py`: Thread-local session maker, SQLite connection args (`check_same_thread=False`), and `init_db`.
+   - `models.py`: Declarative ORM models (`TransactionModel`, `CaseModel`, `CaseTransactionModel`, `CaseNoteModel`, `AuditEventModel`).
+3. Implemented Pydantic data schemas in `backend/app/schemas/`:
+   - `transaction.py`: Core transaction models, paginated list responses, scoring request/response, and explanation response.
+   - `case.py`: Case lifecycle enums, case creation, update, list, and note schemas.
+   - `model.py`: Model metadata and comparative evaluation report schemas.
+   - `audit.py`: Audit event query and list schemas.
+4. Implemented domain services layer in `backend/app/services/`:
+   - `audit_service.py`: Append-only event logging (`record_audit_event`) and filtering (`list_audit_events`).
+   - `model_service.py`: Cached inference engine loader, metadata reporter, and evaluation summary reader.
+   - `transaction_service.py`: Automated batch scoring and SQLite ingestion (`ingest_transactions_dataframe`), filtered pagination, ad-hoc scoring, and explanation generation.
+   - `case_service.py`: Case ID sequencing, case creation, status transition audits, and note history.
+5. Implemented REST API routers in `backend/app/api/v1/`:
+   - `transactions.py`: Querying, pagination, ad-hoc scoring, and SHAP explanation retrieval.
+   - `cases.py`: Case creation, listing, lifecycle updates, and note attachment.
+   - `models.py`: Active model versions, features, thresholds, and benchmark evaluation metrics.
+   - `audit.py`: Audit log retrieval with actor and entity filters.
+   - `upload.py`: Extended CSV upload with optional direct ingestion (`ingest_to_db=True`).
+   - `backend/app/main.py`: Initialized database schema on startup in `lifespan` and registered all routers.
+6. Implemented 19 new backend integration tests:
+   - `tests/backend/conftest.py`: Isolated in-memory SQLite fixture with `StaticPool` and dependency overrides.
+   - `tests/backend/test_database.py`: Tested CRUD, relational cascades, and audit logging.
+   - `tests/backend/test_transaction_api.py`: Tested pagination, filtering, single fetch, real-time scoring, and explanations.
+   - `tests/backend/test_cases_api.py`: Tested case creation, validation errors, status transitions, and notes.
+   - `tests/backend/test_models_api.py`: Tested model metadata and evaluation endpoints.
+   - `tests/backend/test_audit_api.py`: Tested audit log retrieval and filtering.
+   - `tests/backend/test_upload_api.py`: Tested CSV upload with automated database ingestion.
+7. Verification & Code Quality:
+   - `.venv/bin/pytest -v`: All 93 tests passed in 2.68s.
+   - `.venv/bin/ruff check backend ml tests && .venv/bin/ruff format --check backend ml tests`: Zero lint errors across 76 files.
+   - Frontend test, lint, and build: 2 tests passed, bundle built cleanly in 252ms.
+
+#### Files Created / Modified:
+- `backend/requirements.txt`
+- `backend/app/db/__init__.py`
+- `backend/app/db/session.py`
+- `backend/app/db/models.py`
+- `backend/app/schemas/__init__.py`
+- `backend/app/schemas/transaction.py`
+- `backend/app/schemas/case.py`
+- `backend/app/schemas/model.py`
+- `backend/app/schemas/audit.py`
+- `backend/app/services/__init__.py`
+- `backend/app/services/audit_service.py`
+- `backend/app/services/model_service.py`
+- `backend/app/services/transaction_service.py`
+- `backend/app/services/case_service.py`
+- `backend/app/api/v1/transactions.py`
+- `backend/app/api/v1/cases.py`
+- `backend/app/api/v1/models.py`
+- `backend/app/api/v1/audit.py`
+- `backend/app/api/v1/upload.py`
+- `backend/app/main.py`
+- `tests/backend/conftest.py`
+- `tests/backend/test_database.py`
+- `tests/backend/test_transaction_api.py`
+- `tests/backend/test_cases_api.py`
+- `tests/backend/test_models_api.py`
+- `tests/backend/test_audit_api.py`
+- `tests/backend/test_upload_api.py`
+- `docs/project-memory/02_EXECUTION_LOG.md`
+- `docs/project-memory/03_LESSONS_LEARNED.md`
+- `docs/PHASE_STATUS.md`
+
+#### Deviations from Plan:
+- None.
+
+
+---
+
+### Phase 8: Dashboard and Analyst Workflow UI
+- **Date**: 2026-11-03
+- **Status**: Completed (PASS)
+- **Goal**: Build a fully interactive, production-ready web frontend connected to the backend API, enabling analysts to upload datasets, filter and paginate transactions, inspect dual scores and SHAP explainability waterfalls, and manage investigation cases with notes and status transitions.
+
+#### Actions & Commands Executed:
+1. Implemented typed API service methods and contracts in `frontend/src/services/api.ts` connecting to all Phase 7 endpoints.
+2. Built `UploadModal.tsx` supporting drag-and-drop CSV uploads, schema validation display, and automated ingestion into SQLite with dual scoring.
+3. Built `TransactionModal.tsx` showing dual scores, operational review thresholds, SHAP waterfall bars, plain-text non-causal descriptions, regulatory caveats, and case creation CTA.
+4. Built `TransactionsTab.tsx` with search, multi-factor filters (amount, score, flagged status), responsive table layout, score gauges, inspect dialog, and pagination controls.
+5. Built `CasesTab.tsx` with case creation modal, status/priority filters, cases table, status transitions dropdown, priority updates, and chronological analyst note history.
+6. Built `OverviewTab.tsx` with real-time KPI metrics, quick upload button, comparative model benchmark table, and architecture pipeline status.
+7. Enhanced `styles.css` with dark-mode styling for tables, modals, waterfall charts, score meters, badges, and dropzones.
+8. Implemented 4 new frontend unit and workflow tests in `frontend/test/workflow.test.js`.
+9. Verification:
+   - `npm test`: 6 tests passed in 73ms.
+   - `npm run lint`: `tsc --noEmit` passed with 0 errors.
+   - `npm run build`: Production bundle built cleanly in 268ms.
+   - `.venv/bin/pytest -v`: 93 backend tests passed in 2.92s.
+
+#### Files Created / Modified:
+- `frontend/src/services/api.ts`
+- `frontend/src/styles.css`
+- `frontend/src/components/UploadModal.tsx`
+- `frontend/src/components/TransactionModal.tsx`
+- `frontend/src/components/TransactionsTab.tsx`
+- `frontend/src/components/CasesTab.tsx`
+- `frontend/src/components/OverviewTab.tsx`
+- `frontend/src/components/Navbar.tsx`
+- `frontend/src/App.tsx`
+- `frontend/test/workflow.test.js`
+- `docs/project-memory/02_EXECUTION_LOG.md`
+- `docs/project-memory/03_LESSONS_LEARNED.md`
+- `docs/PHASE_STATUS.md`
+
+#### Deviations from Plan:
+- None.
+
+
+---
+
+### Phase 9: Reference Document Ingestion and RAG
+- **Date**: 2026-11-03
+- **Status**: Completed (PASS)
+- **Goal**: Implement retrieval-augmented generation (RAG) over approved regulatory policy reference documents (BSA/AML manual, FinCEN advisories, FATF red flags), ensuring traceable passage citations, untrusted text security boundaries, prompt-injection defense, and non-hallucination safeguards.
+
+#### Actions & Commands Executed:
+1. Curated approved public regulatory policy documents in `data/policies/`:
+   - `manifest.json`: Document catalog registering metadata, issuing bodies, publication dates, source URLs, licenses, and descriptions across 4 reference documents.
+   - `FIN-2021-A003_elder_financial_exploitation.md`: FinCEN advisory on elder financial exploitation indicators and SAR filing directions.
+   - `FATF_red_flag_indicators_money_laundering.md`: FATF guidance on structuring, smurfing, pass-through accounts, and velocity anomalies.
+   - `FFIEC_bsa_aml_examination_manual_sars.md`: FFIEC examination manual on SAR timing thresholds (30 calendar days), statutory tipping-off prohibition (31 U.S.C. 5318(g)(2)), and 5-year record retention.
+   - `FIN-2020-A001_ransomware_cyber_extortion.md`: FinCEN advisory on ransomware, convertible virtual currency (CVC) wallet hops, mixing services, and OFAC sanctions nexus.
+2. Built `rag/` package:
+   - `rag/schemas.py`: Defined Pydantic models for `DocumentMetadata`, `DocumentChunk`, `RetrievedPassage`, `PolicySearchRequest`, `PolicySearchResponse`, and `DocumentCatalogResponse`.
+   - `rag/sanitizer.py`: Security layer treating document text as untrusted passive data; defangs prompt injections (`ignore previous instructions`, `system:`, `[INST]`, `developer mode`), strips control characters, and blocks executable `<script>`/`<iframe>` tags.
+   - `rag/chunker.py`: Document parser splitting Markdown/plain-text by section headings and paragraphs into bounded passages (target 400 chars, ~60 chars overlap) with metadata inheritance and injection sanitization.
+   - `rag/retriever.py`: Implemented `AuditLensRetriever` utilizing Scikit-Learn `TfidfVectorizer` (sublinear term frequency, (1, 2) n-grams) and Cosine Similarity, disk persistence in `data/vector_store/`, configurable `top_k`, issuing body filtering, and explicit "no relevant source found" fallback handling.
+   - `rag/__init__.py`: Package exports.
+3. Created backend service and API router:
+   - `backend/app/services/policy_service.py`: Service abstraction for retriever instance.
+   - `backend/app/api/v1/policy.py`: Endpoints `POST /api/v1/policy/search`, `GET /api/v1/policy/documents`, `POST /api/v1/policy/reindex`.
+   - Registered `policy_router` in `backend/app/main.py`.
+4. Connected frontend Policy References Tab:
+   - Updated `frontend/src/services/api.ts` with RAG data contracts and API methods (`searchPolicies`, `fetchPolicyCatalog`, `reindexPolicies`).
+   - Built `frontend/src/components/PolicyReferencesTab.tsx` with search input, issuing body filter, quick suggestion chips, match meters, traceable passage cards with direct source links, non-determination advisory disclaimer, and collapsible reference document catalog.
+   - Updated `frontend/src/App.tsx`, `Navbar.tsx`, and `OverviewTab.tsx`.
+5. Created automated test suites:
+   - `tests/rag/test_sanitizer.py`: 5 tests covering clean text, whitespace, control chars, prompt injections, and script tags.
+   - `tests/rag/test_chunker.py`: 5 tests covering markdown chunking, section extraction, unsupported formats, non-existent files, and embedded injection sanitization.
+   - `tests/rag/test_retriever.py`: 5 tests covering index creation, search accuracy, issuing body filters, irrelevant query rejection, save/reload persistence, and document catalog.
+   - `tests/backend/test_policy_api.py`: 6 integration tests covering search, filter, 422 validations, irrelevant query handling, catalog, and reindex endpoints.
+   - Expanded `frontend/test/workflow.test.js` with 2 tests verifying RAG traceability contracts, advisory disclaimers, and no-hallucination empty states.
+6. Verification:
+   - `.venv/bin/pytest -v`: 114 tests passed in 3.02s.
+   - `.venv/bin/ruff check .`: All checks passed.
+   - `cd frontend && npm test`: 8 frontend tests passed in 75ms.
+   - `cd frontend && npm run lint`: `tsc --noEmit` clean (0 errors).
+   - `cd frontend && npm run build`: Production bundle built in 270ms.
+
+#### Files Created / Modified:
+- `data/policies/manifest.json`
+- `data/policies/FIN-2021-A003_elder_financial_exploitation.md`
+- `data/policies/FATF_red_flag_indicators_money_laundering.md`
+- `data/policies/FFIEC_bsa_aml_examination_manual_sars.md`
+- `data/policies/FIN-2020-A001_ransomware_cyber_extortion.md`
+- `rag/__init__.py`
+- `rag/schemas.py`
+- `rag/sanitizer.py`
+- `rag/chunker.py`
+- `rag/retriever.py`
+- `backend/app/services/policy_service.py`
+- `backend/app/api/v1/policy.py`
+- `backend/app/main.py`
+- `frontend/src/services/api.ts`
+- `frontend/src/components/PolicyReferencesTab.tsx`
+- `frontend/src/components/OverviewTab.tsx`
+- `frontend/src/components/Navbar.tsx`
+- `frontend/src/App.tsx`
+- `frontend/test/workflow.test.js`
+- `tests/rag/test_sanitizer.py`
+- `tests/rag/test_chunker.py`
+- `tests/rag/test_retriever.py`
+- `tests/backend/test_policy_api.py`
+- `docs/PHASE_STATUS.md`
+- `docs/project-memory/02_EXECUTION_LOG.md`
+- `docs/project-memory/03_LESSONS_LEARNED.md`
+
+#### Deviations from Plan:
+- None.

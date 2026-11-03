@@ -1,11 +1,14 @@
 """Data upload and validation API router."""
 
-from typing import Any
+from typing import Annotated, Any
 
-from fastapi import APIRouter, File, Form, UploadFile, status
+from fastapi import APIRouter, Depends, File, Form, Header, UploadFile, status
 from fastapi.responses import JSONResponse
+from sqlalchemy.orm import Session
 
 from backend.app.core.errors import APIError, create_error_response
+from backend.app.db.session import get_db
+from backend.app.services.transaction_service import ingest_transactions_dataframe
 from ml.data.schema import MAX_UPLOAD_SIZE_BYTES
 from ml.data.validator import validate_csv_bytes
 
@@ -19,11 +22,19 @@ async def upload_csv_dataset(
         False,
         description="Whether this dataset is for supervised training (requires 'Class' column)",
     ),
+    ingest_to_db: bool = Form(
+        False,
+        description="Whether to ingest valid transactions into database for immediate triage",
+    ),
+    x_analyst_id: Annotated[
+        str | None, Header(description="Identity of requesting analyst")
+    ] = None,
+    db: Annotated[Session, Depends(get_db)] = None,
 ) -> JSONResponse:
     """Upload and validate a transaction dataset in CSV format.
 
     Enforces file format, maximum size limits (50MB), schema completeness,
-    data types, and domain bounds. Rejects malformed uploads with actionable errors.
+    data types, and domain bounds. Optionally ingests valid rows into the database.
     """
     # 1. Validate file extension
     filename = file.filename or "unknown.csv"
@@ -49,7 +60,7 @@ async def upload_csv_dataset(
         )
 
     # 3. Validate CSV bytes and parse
-    _df, validation = validate_csv_bytes(
+    df, validation = validate_csv_bytes(
         content=content,
         filename=filename,
         is_training=is_training,
@@ -68,7 +79,18 @@ async def upload_csv_dataset(
             },
         )
 
-    # 4. Return success report
+    # 4. Optional ingestion into SQLite
+    ingested_count = 0
+    if ingest_to_db and df is not None and not df.empty:
+        actor = x_analyst_id or "analyst_system"
+        ingested_count = ingest_transactions_dataframe(
+            db=db,
+            df=df,
+            actor=actor,
+            auto_score=True,
+        )
+
+    # 5. Return success report
     payload: dict[str, Any] = {
         "success": True,
         "data": {
@@ -78,6 +100,7 @@ async def upload_csv_dataset(
             "column_count": validation.column_count,
             "columns_present": validation.columns_present,
             "duplicate_count": validation.duplicate_count,
+            "ingested_count": ingested_count,
             "summary": validation.summary,
             "warnings": validation.warnings,
         },

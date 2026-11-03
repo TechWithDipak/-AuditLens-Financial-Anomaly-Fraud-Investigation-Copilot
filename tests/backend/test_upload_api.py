@@ -85,3 +85,24 @@ def test_upload_corrupted_types_csv():
     assert res["success"] is False
     assert res["error"]["code"] == "INVALID_DATASET"
     assert any("non-numeric" in err for err in res["error"]["details"]["errors"])
+
+
+def test_upload_valid_csv_with_database_ingestion(client: TestClient):
+    """Verify uploading a CSV with ingest_to_db=true validates, scores, and saves to database."""
+    valid_csv_path = SAMPLE_DIR / "synthetic_creditcard_sample.csv"
+    with open(valid_csv_path, "rb") as f:
+        response = client.post(
+            "/api/v1/data/upload",
+            files={"file": ("synthetic_creditcard_sample.csv", f, "text/csv")},
+            data={"is_training": "true", "ingest_to_db": "true"},
+            headers={"X-Analyst-ID": "analyst_uploader"},
+        )
+    assert response.status_code == 200
+    res = response.json()
+    assert res["success"] is True
+    assert res["data"]["ingested_count"] == 150
+
+    # Verify transactions are queryable through the transactions endpoint
+    tx_list = client.get("/api/v1/transactions")
+    assert tx_list.status_code == 200
+    assert tx_list.json()["total"] == 150

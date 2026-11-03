@@ -1,5 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Navbar } from './components/Navbar';
+import { OverviewTab } from './components/OverviewTab';
+import { TransactionsTab } from './components/TransactionsTab';
+import { CasesTab } from './components/CasesTab';
+import { PolicyReferencesTab } from './components/PolicyReferencesTab';
 import { fetchHealth, HealthResponse } from './services/api';
 import './styles.css';
 
@@ -8,6 +12,7 @@ export const App: React.FC = () => {
   const [health, setHealth] = useState<HealthResponse | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [initialTxForCase, setInitialTxForCase] = useState<string | null>(null);
 
   useEffect(() => {
     let isMounted = true;
@@ -58,7 +63,7 @@ export const App: React.FC = () => {
 
         <div className="banner">
           <div className="banner-title">
-            Phase 6 Verified &bull; Human-in-the-Loop Decision Support
+            Phase 9 Active &bull; Human-in-the-Loop Decision Support
           </div>
           <div className="banner-body">
             AuditLens is strictly an advisory decision-support system. It will not execute automated account freezes, decline transactions autonomously, or file suspicious activity reports without an analyst's review.
@@ -66,110 +71,51 @@ export const App: React.FC = () => {
         </div>
 
         {activeTab === 'overview' && (
-          <div>
-            <div className="grid-cards">
-              <div className="card">
-                <div className="card-title">Backend Status</div>
-                <div className="card-value">
-                  {loading ? 'Checking...' : health ? 'ONLINE' : 'OFFLINE'}
-                </div>
-                <div className="card-description">
-                  {health
-                    ? `${health.service} (${health.environment})`
-                    : error || 'FastAPI backend unreachable'}
-                </div>
-              </div>
-
-              <div className="card">
-                <div className="card-title">API Version</div>
-                <div className="card-value">{health?.version || 'v0.1.0'}</div>
-                <div className="card-description">
-                  FastAPI on Python 3.13 + Uvicorn
-                </div>
-              </div>
-
-              <div className="card">
-                <div className="card-title">Phase Gate</div>
-                <div className="card-value">Phase 6</div>
-                <div className="card-description">
-                  <span className="status-badge pass">EXPLAINABILITY VERIFIED</span>
-                </div>
-              </div>
-            </div>
-
-            <div className="card" style={{ marginTop: '1.5rem' }}>
-              <div className="card-title">Architecture Pipeline Status</div>
-              <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: '1rem', fontSize: '0.875rem' }}>
-                <thead>
-                  <tr style={{ borderBottom: '1px solid var(--border-color)', textAlign: 'left', color: 'var(--text-muted)' }}>
-                    <th style={{ padding: '0.5rem 0' }}>Module</th>
-                    <th style={{ padding: '0.5rem 0' }}>Implementation Phase</th>
-                    <th style={{ padding: '0.5rem 0' }}>Status</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr style={{ borderBottom: '1px solid rgba(51, 65, 85, 0.4)' }}>
-                    <td style={{ padding: '0.75rem 0' }}>Project Foundation & Local Dev Environment</td>
-                    <td style={{ padding: '0.75rem 0' }}>Phase 1</td>
-                    <td style={{ padding: '0.75rem 0' }}><span className="status-badge pass">READY</span></td>
-                  </tr>
-                  <tr style={{ borderBottom: '1px solid rgba(51, 65, 85, 0.4)' }}>
-                    <td style={{ padding: '0.75rem 0' }}>Dataset Acquisition & Validation</td>
-                    <td style={{ padding: '0.75rem 0' }}>Phase 2</td>
-                    <td style={{ padding: '0.75rem 0' }}><span className="status-badge pass">READY</span></td>
-                  </tr>
-                  <tr style={{ borderBottom: '1px solid rgba(51, 65, 85, 0.4)' }}>
-                    <td style={{ padding: '0.75rem 0' }}>Exploratory Data Analysis & Preprocessing</td>
-                    <td style={{ padding: '0.75rem 0' }}>Phase 3</td>
-                    <td style={{ padding: '0.75rem 0' }}><span className="status-badge pass">READY</span></td>
-                  </tr>
-                  <tr style={{ borderBottom: '1px solid rgba(51, 65, 85, 0.4)' }}>
-                    <td style={{ padding: '0.75rem 0' }}>Baseline Machine Learning Models</td>
-                    <td style={{ padding: '0.75rem 0' }}>Phase 4</td>
-                    <td style={{ padding: '0.75rem 0' }}><span className="status-badge pass">READY</span></td>
-                  </tr>
-                  <tr style={{ borderBottom: '1px solid rgba(51, 65, 85, 0.4)' }}>
-                    <td style={{ padding: '0.75rem 0' }}>Model Evaluation & Threshold Optimization</td>
-                    <td style={{ padding: '0.75rem 0' }}>Phase 5</td>
-                    <td style={{ padding: '0.75rem 0' }}><span className="status-badge pass">READY</span></td>
-                  </tr>
-                  <tr style={{ borderBottom: '1px solid rgba(51, 65, 85, 0.4)' }}>
-                    <td style={{ padding: '0.75rem 0' }}>Explainability & Analyst-Facing Evidence (SHAP)</td>
-                    <td style={{ padding: '0.75rem 0' }}>Phase 6</td>
-                    <td style={{ padding: '0.75rem 0' }}><span className="status-badge pass">READY</span></td>
-                  </tr>
-                  <tr style={{ borderBottom: '1px solid rgba(51, 65, 85, 0.4)' }}>
-                    <td style={{ padding: '0.75rem 0' }}>Backend API & Case Management</td>
-                    <td style={{ padding: '0.75rem 0' }}>Phase 7</td>
-                    <td style={{ padding: '0.75rem 0' }}><span className="status-badge pending">PENDING APPROVAL</span></td>
-                  </tr>
-                  <tr style={{ borderBottom: '1px solid rgba(51, 65, 85, 0.4)' }}>
-                    <td style={{ padding: '0.75rem 0' }}>Dashboard & Analyst Workflow UI</td>
-                    <td style={{ padding: '0.75rem 0' }}>Phase 8</td>
-                    <td style={{ padding: '0.75rem 0' }}><span className="status-badge pending">PENDING</span></td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
+          <OverviewTab
+            health={health}
+            loading={loading}
+            error={error}
+            onNavigateTab={setActiveTab}
+          />
         )}
 
-        {activeTab !== 'overview' && (
-          <div className="card" style={{ textAlign: 'center', padding: '3rem' }}>
-            <h3 style={{ fontSize: '1.25rem', marginBottom: '0.5rem' }}>
-              Module Scheduled for Subsequent Phase
+        {activeTab === 'transactions' && (
+          <TransactionsTab
+            onOpenCreateCase={(txId) => {
+              setInitialTxForCase(txId);
+              setActiveTab('cases');
+            }}
+          />
+        )}
+
+        {activeTab === 'cases' && (
+          <CasesTab
+            initialTxIdForCase={initialTxForCase}
+            onClearInitialTx={() => setInitialTxForCase(null)}
+          />
+        )}
+
+        {activeTab === 'rag' && <PolicyReferencesTab />}
+
+        {activeTab === 'reports' && (
+          <div className="card" style={{ textAlign: 'center', padding: '3.5rem 2rem' }}>
+            <div style={{ fontSize: '2.5rem', marginBottom: '0.75rem' }}>&#128221;</div>
+            <h3 style={{ fontSize: '1.25rem', marginBottom: '0.5rem', fontWeight: 700 }}>
+              Investigation Report Drafting &amp; LLM Copilot
             </h3>
-            <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
-              This module will be connected as subsequent phases pass their formal test gates.
+            <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', maxWidth: '600px', margin: '0 auto 1.5rem' }}>
+              Automated narrative generation, case report exports (Markdown/JSON/PDF), and LLM-assisted investigation summaries are scheduled for <strong>Phase 10</strong>.
             </p>
+            <div style={{ display: 'inline-block' }}>
+              <span className="status-badge pending">SCHEDULED FOR PHASE 10</span>
+            </div>
           </div>
         )}
       </main>
 
       <footer className="footer">
-        AuditLens &bull; Financial Anomaly &amp; Fraud Investigation Copilot &bull; Phase 6 Verified
+        AuditLens &bull; Financial Anomaly &amp; Fraud Investigation Copilot &bull; Phase 9 Verified
       </footer>
     </div>
   );
 };
-

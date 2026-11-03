@@ -31,7 +31,7 @@ export const Navbar: React.FC<NavbarProps> = ({
         <div>
           <span className="brand-title">AuditLens</span>
           <span className="brand-badge" style={{ marginLeft: '8px' }}>
-            Phase 1
+            Phase 9 Active
           </span>
         </div>
       </div>
