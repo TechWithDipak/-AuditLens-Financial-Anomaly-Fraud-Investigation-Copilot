@@ -222,7 +222,7 @@ export const AlgorithmLabTab: React.FC = () => {
                   K-Means Clustering & Elbow Analysis
                 </h3>
                 <p className="text-xs text-graphite-400">
-                  Partitions transactions into $K$ clusters minimizing within-cluster sum of squares (WCSS).
+                  Partitions transactions into K clusters minimizing within-cluster sum of squares (WCSS).
                 </p>
               </div>
 
@@ -565,7 +565,7 @@ export const AlgorithmLabTab: React.FC = () => {
                     </div>
                     <div>Sequence Length: {forwardResult.sequence_length} steps</div>
                     <div className="text-[10px] text-graphite-500 pt-1">
-                      Computed with scaling factor $c_t$ preventing underflow.
+                      Computed with dynamic scaling factor c_t preventing numerical underflow.
                     </div>
                   </div>
                 </div>
