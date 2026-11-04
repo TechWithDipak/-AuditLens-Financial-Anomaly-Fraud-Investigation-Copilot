@@ -160,7 +160,7 @@ export const ModelComparisonTab: React.FC = () => {
               <span>Operational Decision Threshold & Cost Analysis</span>
             </h3>
             <p className="text-xs text-graphite-400">
-              Evaluates trade-offs across 12 decision thresholds ($\theta \in [0.05, 0.95]$) given financial penalty costs.
+              Evaluates trade-offs across 12 decision thresholds (&theta; in [0.05, 0.95]) given financial penalty costs.
             </p>
           </div>
 

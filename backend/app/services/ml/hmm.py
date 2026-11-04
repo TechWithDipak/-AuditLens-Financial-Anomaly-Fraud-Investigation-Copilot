@@ -146,6 +146,8 @@ class HMMService:
             label = STATE_LABELS.get(state, f"State {state}")
             state_dist[label] = state_dist.get(label, 0) + 1
 
+            merchant_cat = 0 if row["tx_type"] == "PAYMENT" else (1 if row["tx_type"] == "DEBIT" else 2)
+            is_anom = 1 if (int(row["is_fraud"]) == 1 or state == 2) else 0
             timeline_points.append(
                 AccountTimelinePoint(
                     step=int(row["step"]),
@@ -156,6 +158,10 @@ class HMMService:
                     inferred_state=state,
                     inferred_state_label=label,
                     is_fraud=int(row["is_fraud"]),
+                    merchant_category=merchant_cat,
+                    is_anomaly=is_anom,
+                    decoded_state=state,
+                    decoded_state_name=label,
                 )
             )
 
@@ -165,4 +171,7 @@ class HMMService:
             sequence_log_likelihood=round(log_ll, 4),
             timeline=timeline_points,
             state_distribution=state_dist,
+            account_id=customer_id,
+            total_steps=len(timeline_points),
+            anomaly_count=sum(1 for p in timeline_points if p.is_fraud == 1 or p.inferred_state == 2),
         )

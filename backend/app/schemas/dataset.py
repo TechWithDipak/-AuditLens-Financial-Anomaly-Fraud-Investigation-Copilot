@@ -39,3 +39,7 @@ class DatasetValidationResult(BaseModel):
     file_size_bytes: int
     quality: DataQualityReport
     preview_rows: List[Dict[str, Any]] = Field(default_factory=list)
+    # Frontend aliases
+    records: List[Dict[str, Any]] = Field(default_factory=list)
+    total_records: Optional[int] = None
+    columns: List[str] = Field(default_factory=list)

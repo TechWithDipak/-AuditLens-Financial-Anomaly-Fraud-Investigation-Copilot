@@ -2,7 +2,7 @@
 
 from typing import Any, Dict, List, Optional
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class ConfusionMatrix(BaseModel):
@@ -29,6 +29,14 @@ class SupervisedTrainRequest(BaseModel):
     test_size: float = 0.2
     val_size: float = 0.1
     random_state: int = 42
+    # Optional hyperparameter overrides from frontend
+    max_depth: Optional[int] = None
+    min_samples_split: Optional[int] = None
+    class_weight: Optional[str] = None
+    n_estimators: Optional[int] = None
+    learning_rate: Optional[float] = None
+    subsample: Optional[float] = None
+    ensemble_type: Optional[str] = None
 
 
 class SupervisedTrainResponse(BaseModel):
@@ -61,3 +69,4 @@ class ModelComparisonResponse(BaseModel):
     test_fraud_count: int
     comparison: List[ModelComparisonItem]
     best_model_by_prauc: str
+    models: List[Dict[str, Any]] = Field(default_factory=list)

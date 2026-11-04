@@ -87,6 +87,7 @@ def train_ensemble(
 
 
 @router.get("/compare", response_model=ModelComparisonResponse)
+@router.post("/compare", response_model=ModelComparisonResponse)
 def compare_models(
     dataset_name: str = Query("creditcard_sample_fixture.csv"),
     test_size: float = Query(0.2),
@@ -97,6 +98,21 @@ def compare_models(
         dataset_name, test_size=test_size, random_state=random_state
     )
     try:
-        return EnsembleService.compare_all_models(train_df, test_df, random_state=random_state)
+        res = EnsembleService.compare_all_models(train_df, test_df, random_state=random_state)
+        res.models = [
+            {
+                "name": item.model_name,
+                "metrics": {
+                    "pr_auc": item.pr_auc,
+                    "f1": item.f1_score,
+                    "precision": item.precision,
+                    "recall": item.recall,
+                    "roc_auc": item.roc_auc,
+                    "confusion_matrix": [[0, 0], [0, 0]],
+                },
+            }
+            for item in res.comparison
+        ]
+        return res
     except Exception as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e)) from e

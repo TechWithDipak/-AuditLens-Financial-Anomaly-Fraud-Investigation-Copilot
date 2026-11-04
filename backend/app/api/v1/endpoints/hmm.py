@@ -53,3 +53,14 @@ def get_account_timeline(
         return HMMService.get_account_timeline(customer_id=customer_id)
     except Exception as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e)) from e
+
+
+@router.get("/accounts/{account_id}/timeline", response_model=AccountTimelineResponse)
+def get_account_timeline_by_path(
+    account_id: str,
+) -> AccountTimelineResponse:
+    """Alias for account timeline with path parameter for RESTful frontend access."""
+    try:
+        return HMMService.get_account_timeline(customer_id=account_id)
+    except Exception as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e)) from e

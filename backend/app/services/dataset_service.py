@@ -154,6 +154,9 @@ class DatasetService:
             file_size_bytes=file_size_bytes,
             quality=quality,
             preview_rows=preview_rows,
+            records=preview_rows,
+            total_records=row_count,
+            columns=list(df.columns),
         )
 
     @classmethod

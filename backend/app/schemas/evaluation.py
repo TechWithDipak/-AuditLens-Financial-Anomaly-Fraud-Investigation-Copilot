@@ -1,8 +1,21 @@
 """Schemas for Integrated Evaluation, SHAP Explainability, and Threshold Tuning."""
 
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional
 
 from pydantic import BaseModel, Field
+
+
+class ExplainTransactionRequest(BaseModel):
+    transaction_index: int = 0
+    model_name: str = "xgboost"
+    decision_threshold: float = 0.5
+
+
+class ThresholdAnalysisRequest(BaseModel):
+    cost_fp: float = 10.0
+    cost_fn: float = 500.0
+    model_name: str = "xgboost"
+    dataset_name: str = "creditcard_sample_fixture.csv"
 
 
 class FeatureAttribution(BaseModel):
@@ -22,6 +35,10 @@ class SHAPExplanationResponse(BaseModel):
     top_attributions: List[FeatureAttribution]
     raw_shap_values: Dict[str, float]
     caveat: str = "SHAP values measure statistical model feature contribution, not proof of causation or legal liability."
+    # Frontend aliases
+    transaction_index: Optional[int] = None
+    features: List[Dict[str, Any]] = Field(default_factory=list)
+    advisory_notice: Optional[str] = None
 
 
 class ThresholdPoint(BaseModel):
@@ -33,6 +50,10 @@ class ThresholdPoint(BaseModel):
     false_positive: int
     false_negative: int
     true_negative: int
+    # Frontend aliases
+    f1: Optional[float] = None
+    expected_cost: Optional[float] = None
+    flagged_count: Optional[int] = None
 
 
 class ThresholdCurveResponse(BaseModel):
@@ -41,6 +62,9 @@ class ThresholdCurveResponse(BaseModel):
     optimal_f1_threshold: float
     high_recall_threshold: float  # e.g., threshold achieving >= 90% recall
     message: str = "Threshold tuning balances investigator review capacity against fraud leakage."
+    # Frontend aliases
+    thresholds: Optional[List[Dict[str, Any]]] = None
+    min_cost_threshold: Optional[float] = None
 
 
 class IsolationForestRunRequest(BaseModel):

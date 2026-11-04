@@ -11,6 +11,7 @@ from sklearn.preprocessing import RobustScaler
 
 from app.schemas.preprocessing import (
     EDAResponse,
+    EdaColumnSummary,
     FeatureDistribution,
     SplitPartitionInfo,
     TimeAnalysis,
@@ -40,23 +41,39 @@ def compute_eda(df: pd.DataFrame) -> EDAResponse:
             hourly_rate_avg=rate,
         )
 
-    # Feature distributions
+    # Feature distributions and column summaries
     distributions: List[FeatureDistribution] = []
+    columns_summary: dict[str, EdaColumnSummary] = {}
     numeric_cols = [c for c in df.columns if pd.api.types.is_numeric_dtype(df[c]) and c != "Class"]
 
     for col in numeric_cols:
         s = df[col].dropna()
         if not s.empty:
+            mean_v = round(float(s.mean()), 4)
+            std_v = round(float(s.std()), 4)
+            med_v = round(float(s.median()), 4)
+            min_v = round(float(s.min()), 4)
+            max_v = round(float(s.max()), 4)
+            skew_v = round(float(s.skew()), 4)
             distributions.append(
                 FeatureDistribution(
                     feature=col,
-                    mean=round(float(s.mean()), 4),
-                    std=round(float(s.std()), 4),
-                    median=round(float(s.median()), 4),
-                    min=round(float(s.min()), 4),
-                    max=round(float(s.max()), 4),
-                    skewness=round(float(s.skew()), 4),
+                    mean=mean_v,
+                    std=std_v,
+                    median=med_v,
+                    min=min_v,
+                    max=max_v,
+                    skewness=skew_v,
                 )
+            )
+            columns_summary[col] = EdaColumnSummary(
+                mean=mean_v,
+                std=std_v,
+                median=med_v,
+                min=min_v,
+                max=max_v,
+                skewness=skew_v,
+                missing_count=int(df[col].isna().sum()),
             )
 
     return EDAResponse(
@@ -66,6 +83,12 @@ def compute_eda(df: pd.DataFrame) -> EDAResponse:
         fraud_rate_pct=fraud_rate_pct,
         time_analysis=time_info,
         feature_distributions=distributions,
+        total_rows=total_records,
+        total_columns=total_features,
+        duration_hours=time_info.duration_hours if time_info else 0.0,
+        hourly_transaction_rate=time_info.hourly_rate_avg if time_info else 0.0,
+        fraud_rate=round(fraud_count / max(total_records, 1), 6),
+        columns=columns_summary,
     )
 
 

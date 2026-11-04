@@ -53,6 +53,11 @@ class AccountTimelinePoint(BaseModel):
     inferred_state: int
     inferred_state_label: str
     is_fraud: int
+    # Frontend aliases
+    merchant_category: Optional[int] = None
+    is_anomaly: Optional[int] = None
+    decoded_state: Optional[int] = None
+    decoded_state_name: Optional[str] = None
 
 
 class AccountTimelineResponse(BaseModel):
@@ -61,3 +66,7 @@ class AccountTimelineResponse(BaseModel):
     sequence_log_likelihood: float
     timeline: List[AccountTimelinePoint]
     state_distribution: Dict[str, int]
+    # Frontend aliases
+    account_id: Optional[str] = None
+    total_steps: Optional[int] = None
+    anomaly_count: Optional[int] = None
