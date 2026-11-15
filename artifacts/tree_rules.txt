@@ -1,0 +1,40 @@
+|--- amt <= 1.03
+|   |--- hmm_score <= -2.06
+|   |   |--- amt <= -0.28
+|   |   |   |--- log_amt <= -1.24
+|   |   |   |   |--- class: 0
+|   |   |   |--- log_amt >  -1.24
+|   |   |   |   |--- class: 1
+|   |   |--- amt >  -0.28
+|   |   |   |--- hour <= 1.28
+|   |   |   |   |--- class: 0
+|   |   |   |--- hour >  1.28
+|   |   |   |   |--- class: 1
+|   |--- hmm_score >  -2.06
+|   |   |--- is_night <= 0.44
+|   |   |   |--- kmeans_cluster <= 2.50
+|   |   |   |   |--- class: 0
+|   |   |   |--- kmeans_cluster >  2.50
+|   |   |   |   |--- class: 1
+|   |   |--- is_night >  0.44
+|   |   |   |--- amt <= -0.29
+|   |   |   |   |--- class: 0
+|   |   |   |--- amt >  -0.29
+|   |   |   |   |--- class: 0
+|--- amt >  1.03
+|   |--- category_travel <= 0.50
+|   |   |--- is_night <= 0.44
+|   |   |   |--- hmm_score <= -1.96
+|   |   |   |   |--- class: 1
+|   |   |   |--- hmm_score >  -1.96
+|   |   |   |   |--- class: 1
+|   |   |--- is_night >  0.44
+|   |   |   |--- log_amt <= 2.86
+|   |   |   |   |--- class: 1
+|   |   |   |--- log_amt >  2.86
+|   |   |   |   |--- class: 0
+|   |--- category_travel >  0.50
+|   |   |--- log_amt <= 1.50
+|   |   |   |--- class: 0
+|   |   |--- log_amt >  1.50
+|   |   |   |--- class: 0
