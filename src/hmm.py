@@ -5,6 +5,7 @@ from typing import Tuple, List, Optional
 import numpy as np
 import pandas as pd
 from scipy.special import logsumexp
+
 from hmmlearn.hmm import CategoricalHMM
 import joblib
 

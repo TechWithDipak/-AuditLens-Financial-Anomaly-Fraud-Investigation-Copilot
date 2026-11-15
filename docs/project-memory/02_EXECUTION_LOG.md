@@ -92,3 +92,24 @@ Commands:
 Deviations: None.
 Noticed (out of scope): None.
 Status: done
+
+## 2026-11-15 | Production Dashboard UI Enhancement and Semantic Palette Styling | size: medium
+Plan:
+1. Elevate overall dashboard design to a clean, production-grade enterprise risk terminal.
+2. Structure high-visibility system header with active status chips, model architecture, calibrated threshold, and test split details.
+3. Add color-coded top stripes on overview KPI metric cards and mark headline PR-AUC with target tag.
+4. Enhance Confusion Matrix with executive quadrant cards highlighting True Pass, False Alert, False Negative, and Fraud Capture rates alongside standard verification table.
+5. In Investigation Pane, implement visual Calibrated Risk Spectrum bar (Normal <20, Suspicious 20-95, Fraud >=95) with active score position.
+6. Enhance Cardholder Behavioral Comparison with semantic deviation badges (Spend Spike, Remote Merchant, Late Night, Outlier Z-score).
+7. Format HMM Viterbi state path with styled transition pills (S0 -> S1 -> S2).
+8. Ensure strict compliance: zero banned words, zero emojis, WCAG AA contrast (>= 4.5:1), and zero hex codes outside `src/config.py` and `.streamlit/config.toml`.
+
+Changes:
+- `app.py`: Upgraded layout, KPI cards, confusion matrix quadrants, risk spectrum bar, comparison variance tags, and Viterbi state pills using centralized palette constants.
+Commands:
+- `pytest -v` -> 22 passed in 3.69s
+- `pytest tests/test_compliance.py -v` -> 5 passed in 0.61s
+- `grep -rn --exclude-dir={.git,.venv,.pytest_cache,__pycache__} "#[0-9a-fA-F]\{3,6\}" src/ app.py train.py` -> Only src/config.py matches.
+Deviations: None.
+Noticed (out of scope): None.
+Status: done
