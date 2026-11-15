@@ -1,8 +1,23 @@
-"""Static compliance tests for style, banned words, emojis, and monochrome design."""
+"""Static compliance tests for style, banned words, emojis, WCAG contrast, and palette centralization."""
 
 import re
 from pathlib import Path
 import pytest
+
+from src.config import (
+    COLOR_BACKGROUND,
+    COLOR_PANELS,
+    COLOR_BORDERS,
+    COLOR_TEXT,
+    COLOR_TEXT_SECONDARY,
+    COLOR_ACCENT,
+    COLOR_NORMAL_TEXT,
+    COLOR_NORMAL_BG,
+    COLOR_SUSPICIOUS_TEXT,
+    COLOR_SUSPICIOUS_BG,
+    COLOR_FRAUD_TEXT,
+    COLOR_FRAUD_BG,
+)
 
 BANNED_WORDS = [
     "powerful",
@@ -28,22 +43,43 @@ EMOJI_REGEX = re.compile(
     flags=re.UNICODE,
 )
 
-# Allowed grayscale hex values
-ALLOWED_GRAYSCALE_HEX = {
-    "#ffffff",
-    "#111111",
-    "#666666",
-    "#dddddd",
-    "#f6f6f6",
-    "#eeeeee",
-    "#333333",
-    "#888888",
-    "#000000",
-    "#e0e0e0",
-    "#999999",
+# Approved 12 palette hex values (case-insensitive)
+APPROVED_PALETTE_HEX = {
+    "#ffffff",  # background
+    "#f5f7fa",  # panels
+    "#d9dee5",  # borders
+    "#1a1d21",  # text
+    "#5c6670",  # secondary text
+    "#1f4e8c",  # accent blue
+    "#2e6b3f",  # normal text
+    "#eaf3ec",  # normal bg
+    "#8a5a00",  # suspicious text
+    "#fbf1dc",  # suspicious bg
+    "#9b1c1c",  # fraud text
+    "#fbe9e9",  # fraud bg
 }
 
 HEX_REGEX = re.compile(r"#[0-9a-fA-F]{6}\b")
+
+
+def relative_luminance(hex_code: str) -> float:
+    """Calculate WCAG 2.1 relative luminance for a sRGB hex code."""
+    hex_code = hex_code.lstrip("#")
+    r, g, b = [int(hex_code[i : i + 2], 16) / 255.0 for i in (0, 2, 4)]
+
+    def linearize(c: float) -> float:
+        return c / 12.92 if c <= 0.04045 else ((c + 0.055) / 1.055) ** 2.4
+
+    return 0.2126 * linearize(r) + 0.7152 * linearize(g) + 0.0722 * linearize(b)
+
+
+def calculate_contrast_ratio(fg_hex: str, bg_hex: str) -> float:
+    """Calculate WCAG 2.1 contrast ratio between foreground and background colors."""
+    l1 = relative_luminance(fg_hex)
+    l2 = relative_luminance(bg_hex)
+    lighter = max(l1, l2)
+    darker = min(l1, l2)
+    return (lighter + 0.05) / (darker + 0.05)
 
 
 def get_all_project_files():
@@ -52,7 +88,6 @@ def get_all_project_files():
     files = []
     for ext in ["*.py", "*.md", "*.toml"]:
         for p in base.rglob(ext):
-            # Ignore virtualenv, git, pytest cache
             if any(part in p.parts for part in [".venv", ".git", ".pytest_cache"]):
                 continue
             files.append(p)
@@ -64,14 +99,13 @@ def test_zero_banned_words_in_code_and_app():
     files = get_all_project_files()
     violations = []
     for f in files:
-        # Skip this test file itself from self-matching literal strings
         if f.name == "test_compliance.py":
             continue
         content = f.read_text(encoding="utf-8")
         for word in BANNED_WORDS:
             matches = re.findall(rf"\b{word}\b", content, re.IGNORECASE)
             if matches:
-                violations.append(f"{f.relative_to(f.parent.parent)}: found '{word}' ({len(matches)} times)")
+                violations.append(f"{f.name}: found '{word}' ({len(matches)} times)")
 
     assert not violations, f"Banned words detected:\n" + "\n".join(violations)
 
@@ -91,22 +125,69 @@ def test_zero_emojis_in_entire_project():
     assert not violations, f"Emojis detected:\n" + "\n".join(violations)
 
 
-def test_strict_monochrome_palette():
-    """Ensure all hex color codes are strictly grayscale."""
-    code_files = [
-        Path("app.py"),
-        Path("src/report.py"),
-        Path(".streamlit/config.toml"),
+def test_text_on_colored_backgrounds_wcag_contrast():
+    """Verify that text on colored backgrounds satisfies WCAG AA minimum contrast of 4.5:1."""
+    pairs = [
+        ("Normal risk label", COLOR_NORMAL_TEXT, COLOR_NORMAL_BG),
+        ("Suspicious risk label", COLOR_SUSPICIOUS_TEXT, COLOR_SUSPICIOUS_BG),
+        ("Fraud risk label", COLOR_FRAUD_TEXT, COLOR_FRAUD_BG),
+        ("Primary text on page background", COLOR_TEXT, COLOR_BACKGROUND),
+        ("Primary text on subtle panels", COLOR_TEXT, COLOR_PANELS),
+        ("Secondary text on page background", COLOR_TEXT_SECONDARY, COLOR_BACKGROUND),
+        ("Button text on accent blue", COLOR_BACKGROUND, COLOR_ACCENT),
     ]
+
+    contrast_failures = []
+    for label, fg, bg in pairs:
+        ratio = calculate_contrast_ratio(fg, bg)
+        if ratio < 4.5:
+            contrast_failures.append(f"{label} ({fg} on {bg}): contrast ratio {ratio:.2f}:1 is under 4.5:1")
+
+    assert not contrast_failures, "WCAG contrast violations found:\n" + "\n".join(contrast_failures)
+
+
+def test_palette_defined_once_in_config_only():
+    """Verify hex color codes are defined only in src/config.py and .streamlit/config.toml."""
+    base = Path(__file__).resolve().parent.parent
+    code_files = [
+        base / "app.py",
+        base / "train.py",
+        base / "src" / "data.py",
+        base / "src" / "features.py",
+        base / "src" / "em_gmm.py",
+        base / "src" / "hmm.py",
+        base / "src" / "models.py",
+        base / "src" / "explain.py",
+        base / "src" / "report.py",
+    ]
+
     violations = []
     for f in code_files:
         if not f.exists():
             continue
         content = f.read_text(encoding="utf-8")
-        hex_colors = HEX_REGEX.findall(content)
-        for h in hex_colors:
-            h_lower = h.lower()
-            if h_lower not in ALLOWED_GRAYSCALE_HEX:
-                violations.append(f"{f.name}: disallowed color {h}")
+        hex_matches = HEX_REGEX.findall(content)
+        if hex_matches:
+            violations.append(f"{f.name}: found hardcoded hex values {hex_matches}")
 
-    assert not violations, f"Non-grayscale colors detected:\n" + "\n".join(violations)
+    assert not violations, (
+        "Hex values found outside of src/config.py and .streamlit/config.toml:\n"
+        + "\n".join(violations)
+    )
+
+
+def test_strict_palette_compliance():
+    """Ensure every hex code defined in src/config.py and config.toml belongs to the approved palette."""
+    base = Path(__file__).resolve().parent.parent
+    config_py = base / "src" / "config.py"
+    config_toml = base / ".streamlit" / "config.toml"
+
+    violations = []
+    for f in [config_py, config_toml]:
+        content = f.read_text(encoding="utf-8")
+        hex_matches = HEX_REGEX.findall(content)
+        for h in hex_matches:
+            if h.lower() not in APPROVED_PALETTE_HEX:
+                violations.append(f"{f.name}: disallowed hex color {h}")
+
+    assert not violations, f"Disallowed hex colors in config:\n" + "\n".join(violations)

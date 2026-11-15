@@ -13,7 +13,7 @@ Deliver AuditLens: a small, clean, high-performance web application that flags t
 - **Dataset**: Strictly Kaggle `kartik2112/fraud-detection` (`data/raw/fraudTrain.csv` and `fraudTest.csv`). The dataset is synthetic.
 - **Split Discipline**: Temporal chronological split (first 80% train, last 20% validation of fraudTrain; fraudTest as holdout test). Zero future-to-past leakage.
 - **Technology Stack**: Python 3.13, pandas, numpy, scikit-learn, xgboost, shap, hmmlearn, Streamlit, Plotly. No database, no React, no external API server.
-- **Design System**: Strict black, white, and grayscale palette (#FFFFFF, #111111, #666666, #DDDDDD, #F6F6F6). No accent colors, no gradients, no emojis, no decorative icons, no hype language.
+- **Design System**: Refined palette defined once in `src/config.py` and `.streamlit/config.toml` (Background #FFFFFF, panels #F5F7FA, borders #D9DEE5, text #1A1D21, secondary text #5C6670, accent blue #1F4E8C, and risk colors Normal #2E6B3F on #EAF3EC, Suspicious #8A5A00 on #FBF1DC, Fraud #9B1C1C on #FBE9E9). No emojis, no gradients, no decorative icons, no hype language.
 - **Currency**: Display in Indian Rupees (₹) with Indian numbering format (1 USD = 83 INR configurable). Underlying model computes on raw amounts.
 - **Performance**: Precomputed test evaluation scores saved in Parquet; no raw CSV parsing on UI interactions.
 
@@ -109,4 +109,5 @@ Deliver AuditLens: a small, clean, high-performance web application that flags t
 ## 11. Revision Log
 - **2026-11-15**: Initial specification and architecture definition.
 - **2026-11-15**: Full implementation completed. Model training achieved 0.9176 Test PR-AUC, 0.9981 ROC-AUC, 85.42% precision, 86.29% recall, and 0.8585 F1 at validation-tuned threshold 0.9500. All 16 unit, math, leakage, compliance, and AppTest UI tests passed.
+- **2026-11-15**: UI Colour Update completed. Centralized 12-color palette in `src/config.py` and `.streamlit/config.toml` with zero hex values in other source files. All text-on-color contrast ratios exceed 4.5:1 (up to 16.9:1). Applied custom Plotly template globally, thin left borders on flagged table rows, and updated all 21 automated tests.
 

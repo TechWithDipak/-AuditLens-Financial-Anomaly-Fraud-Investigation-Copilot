@@ -14,7 +14,7 @@ The codebase follows a flat, modular architecture:
 - `app.py`: The single-entry Streamlit user interface structured across four dedicated tabs using a minimal monochrome aesthetic.
 - `train.py`: Full training pipeline executing causal feature extraction, unsupervised fitting, supervised modeling, validation threshold tuning, test evaluation, and artifact serialization.
 - `requirements.txt`: Exact pinned dependency specifications.
-- `.streamlit/config.toml`: Streamlit theme configuration enforcing white background (#FFFFFF), dark text (#111111), and subtle gray panels (#F6F6F6).
+- `.streamlit/config.toml`: Streamlit theme configuration enforcing white background (#FFFFFF), dark text (#1A1D21), subtle gray panels (#F5F7FA), borders (#D9DEE5), and accent blue (#1F4E8C).
 - `src/config.py`: Central repository paths, currency conversion constants (`USD_TO_INR = 83.0`), random seed (`42`), and column definitions.
 - `src/data.py`: Raw dataset loading, verification, and chronological splitting (80% train, 20% validation, holdout test).
 - `src/features.py`: Vectorized causal rolling customer statistics (`secs_since_last_txn`, `amt_zscore_vs_customer_history`, `txn_count_last_24h`), haversine distance calculation, and train-only `FeaturePipeline`.

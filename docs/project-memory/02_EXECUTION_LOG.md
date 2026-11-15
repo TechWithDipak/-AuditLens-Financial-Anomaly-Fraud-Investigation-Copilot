@@ -51,3 +51,27 @@ Commands:
 Deviations: Added scaled Forward algorithm alongside log-space Forward to accelerate customer sequential scoring across 1.85 million records from 20 minutes to 3.2 seconds.
 Noticed (out of scope): None.
 Status: done
+
+## 2026-11-15 | UI Colour Update | size: medium
+Plan:
+1. Define 12 approved palette colors in `src/config.py` and `.streamlit/config.toml` only.
+2. Remove all hardcoded hex strings from `app.py`, `src/report.py`, and other code files.
+3. Apply custom Plotly template globally with accent blue, fraud red, and light grey-blue styling.
+4. Implement thin left borders on flagged table rows.
+5. Add automated WCAG AA contrast ratio test (>= 4.5:1) and centralized palette compliance tests.
+6. Re-run full test suite and AppTest headless execution.
+
+Changes:
+- `src/config.py`: Added 12 palette constants and custom Plotly template `auditlens`.
+- `.streamlit/config.toml`: Configured primaryColor #1F4E8C, backgroundColor #FFFFFF, secondaryBackgroundColor #F5F7FA, textColor #1A1D21.
+- `app.py`: Replaced all hardcoded hex values with imported constants; added dashed red threshold line on histogram, red/larger fraud dots on PCA scatter, SHAP direction coloring, and thin left border on flagged table rows.
+- `src/report.py`: Replaced hardcoded hex values with imported constants and preserved black-and-white print contrast.
+- `tests/test_compliance.py`: Added WCAG 2.1 contrast ratio test (all pass >= 4.5:1), strict palette verification, and centralization check.
+Commands:
+- `pytest tests/test_compliance.py` -> 5 passed in 0.98s
+- `pytest tests/test_app.py` -> 4 passed in 2.75s
+- `pytest -v` -> 21 passed in 3.23s
+- `grep -rn --exclude-dir={.git,.venv,.pytest_cache,__pycache__} "#[0-9a-fA-F]\{3,6\}" src/ app.py train.py` -> Only src/config.py matches.
+Deviations: None.
+Noticed (out of scope): None.
+Status: done

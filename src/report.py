@@ -1,7 +1,20 @@
-"""Monochrome audit report generator for AuditLens transactions."""
+"""Audit report generator for AuditLens transactions."""
 
-from typing import Dict, List, Any
-from src.config import USD_TO_INR
+from typing import Dict, Any
+from src.config import (
+    USD_TO_INR,
+    COLOR_BACKGROUND,
+    COLOR_PANELS,
+    COLOR_BORDERS,
+    COLOR_TEXT,
+    COLOR_TEXT_SECONDARY,
+    COLOR_NORMAL_TEXT,
+    COLOR_NORMAL_BG,
+    COLOR_SUSPICIOUS_TEXT,
+    COLOR_SUSPICIOUS_BG,
+    COLOR_FRAUD_TEXT,
+    COLOR_FRAUD_BG,
+)
 from src.explain import format_inr
 
 
@@ -10,7 +23,7 @@ def generate_markdown_report(
     explanation: Dict[str, Any],
     usd_to_inr_rate: float = USD_TO_INR,
 ) -> str:
-    """Generate clean Markdown audit report in plain black and white."""
+    """Generate clean Markdown audit report."""
     reasons = explanation.get("reasons", [])
     check_next = explanation.get("check_next", [])
     comp = explanation.get("comparison", {})
@@ -21,6 +34,10 @@ def generate_markdown_report(
     reasons_md = "\n".join(f"{i+1}. {r}" for i, r in enumerate(reasons))
     check_md = "\n".join(f"- {c}" for c in check_next)
 
+    verdict = txn_data.get("verdict", "N/A")
+    score = float(txn_data.get("risk_score", 0.0))
+    tag_str = f"**{verdict} ({score:.1f})**" if verdict == "Fraud" else f"{verdict} ({score:.1f})"
+
     md = f"""# AuditLens Transaction Audit Report
 
 ## Transaction Overview
@@ -30,8 +47,8 @@ def generate_markdown_report(
 - **Merchant**: {txn_data.get('merchant', 'N/A')}
 - **Category**: {txn_data.get('category', 'N/A')}
 - **Amount**: {amt_inr}
-- **Verdict**: {txn_data.get('verdict', 'N/A')}
-- **Risk Score**: {txn_data.get('risk_score', 0):.1f} / 100
+- **Verdict**: {tag_str}
+- **Risk Score**: {score:.1f} / 100
 
 ## Why Flagged
 {reasons_md}
@@ -58,7 +75,7 @@ def generate_html_report(
     explanation: Dict[str, Any],
     usd_to_inr_rate: float = USD_TO_INR,
 ) -> str:
-    """Generate printable HTML audit report in strict black and white."""
+    """Generate printable HTML audit report using palette colors with print readability."""
     reasons = explanation.get("reasons", [])
     check_next = explanation.get("check_next", [])
     comp = explanation.get("comparison", {})
@@ -69,6 +86,10 @@ def generate_html_report(
     reasons_html = "".join(f"<li>{r}</li>" for r in reasons)
     check_html = "".join(f"<li>{c}</li>" for c in check_next)
 
+    verdict = txn_data.get("verdict", "N/A")
+    score = float(txn_data.get("risk_score", 0.0))
+    tag_label = f"<strong>{verdict} ({score:.1f})</strong>" if verdict == "Fraud" else f"{verdict} ({score:.1f})"
+
     html = f"""<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -77,8 +98,8 @@ def generate_html_report(
 <style>
   body {{
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    color: #111111;
-    background-color: #FFFFFF;
+    color: {COLOR_TEXT};
+    background-color: {COLOR_BACKGROUND};
     margin: 40px auto;
     max-width: 800px;
     line-height: 1.5;
@@ -87,7 +108,7 @@ def generate_html_report(
     font-size: 22px;
     font-weight: 600;
     margin-bottom: 4px;
-    border-bottom: 2px solid #111111;
+    border-bottom: 2px solid {COLOR_TEXT};
     padding-bottom: 8px;
   }}
   h2 {{
@@ -103,32 +124,36 @@ def generate_html_report(
     font-size: 13px;
   }}
   .meta-table td, .comp-table th, .comp-table td {{
-    border: 1px solid #DDDDDD;
+    border: 1px solid {COLOR_BORDERS};
     padding: 8px 10px;
     text-align: left;
   }}
   .comp-table th {{
-    background-color: #F6F6F6;
+    background-color: {COLOR_PANELS};
     font-weight: 600;
   }}
   .badge {{
     display: inline-block;
     padding: 2px 8px;
-    font-weight: 600;
-    border: 1px solid #111111;
     font-size: 12px;
   }}
   .badge-fraud {{
-    background-color: #111111;
-    color: #FFFFFF;
+    background-color: {COLOR_FRAUD_BG};
+    color: {COLOR_FRAUD_TEXT};
+    border: 1px solid {COLOR_FRAUD_TEXT};
+    font-weight: 700;
   }}
   .badge-suspicious {{
-    background-color: #FFFFFF;
-    color: #111111;
+    background-color: {COLOR_SUSPICIOUS_BG};
+    color: {COLOR_SUSPICIOUS_TEXT};
+    border: 1px solid {COLOR_SUSPICIOUS_TEXT};
+    font-weight: 500;
   }}
   .badge-normal {{
-    color: #666666;
-    border: 1px solid #DDDDDD;
+    background-color: {COLOR_NORMAL_BG};
+    color: {COLOR_NORMAL_TEXT};
+    border: 1px solid {COLOR_NORMAL_TEXT};
+    font-weight: 500;
   }}
   ol, ul {{
     padding-left: 20px;
@@ -139,14 +164,35 @@ def generate_html_report(
   }}
   .footer {{
     margin-top: 36px;
-    border-top: 1px solid #DDDDDD;
+    border-top: 1px solid {COLOR_BORDERS};
     padding-top: 12px;
     font-size: 11px;
-    color: #666666;
+    color: {COLOR_TEXT_SECONDARY};
   }}
   @media print {{
     body {{
       margin: 20mm;
+      color: black;
+      background-color: white;
+    }}
+    .badge-fraud {{
+      border: 2px solid black;
+      color: black;
+      background-color: transparent;
+      font-weight: 700;
+    }}
+    .badge-suspicious {{
+      border: 1px dashed black;
+      color: black;
+      background-color: transparent;
+    }}
+    .badge-normal {{
+      border: 1px solid gray;
+      color: black;
+      background-color: transparent;
+    }}
+    .comp-table th {{
+      background-color: transparent;
     }}
   }}
 </style>
@@ -154,7 +200,7 @@ def generate_html_report(
 <body>
 
 <h1>AuditLens Transaction Audit Report</h1>
-<p style="color: #666666; font-size: 12px; margin-top: 2px;">Automated Forensic Evaluation Record</p>
+<p style="color: {COLOR_TEXT_SECONDARY}; font-size: 12px; margin-top: 2px;">Automated Forensic Evaluation Record</p>
 
 <h2>Transaction Identification</h2>
 <table class="meta-table">
@@ -178,9 +224,9 @@ def generate_html_report(
   </tr>
   <tr>
     <td><strong>Verdict</strong></td>
-    <td><span class="badge {'badge-fraud' if txn_data.get('verdict') == 'Fraud' else 'badge-suspicious' if txn_data.get('verdict') == 'Suspicious' else 'badge-normal'}">{txn_data.get('verdict', 'N/A')}</span></td>
+    <td><span class="badge {'badge-fraud' if verdict == 'Fraud' else 'badge-suspicious' if verdict == 'Suspicious' else 'badge-normal'}">{tag_label}</span></td>
     <td><strong>Risk Score</strong></td>
-    <td><strong>{txn_data.get('risk_score', 0):.1f} / 100</strong></td>
+    <td><strong>{score:.1f} / 100</strong></td>
   </tr>
 </table>
 

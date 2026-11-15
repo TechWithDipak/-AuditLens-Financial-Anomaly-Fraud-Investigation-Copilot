@@ -20,3 +20,10 @@ Mistake: Initial `test_scored.parquet` contained only subset columns, causing in
 Root cause: Assumptions about which columns the UI needed for secondary interactive buttons.
 Fix: Precomputed PCA coordinates directly in `test_scored.parquet` and included all base features.
 Prevention rule: In data artifact generation, always include all columns referenced by UI interactive widgets.
+
+## 2026-11-15 | Palette Centralization and WCAG Contrast Verification
+Learned: Hardcoding hex values across multiple component files creates maintenance debt and makes theme synchronization error-prone.
+Mistake: Earlier implementations had hex codes dispersed across `app.py`, `src/report.py`, and test files.
+Root cause: Direct string styling without centralized constants.
+Fix: Exported palette constants from `src/config.py` and `.streamlit/config.toml` only, interpolating them into UI and report styles. Added automated WCAG 2.1 relative luminance and contrast ratio calculations in `tests/test_compliance.py`.
+Prevention rule: Define color tokens once at the configuration layer and enforce single-source-of-truth via static compliance tests.

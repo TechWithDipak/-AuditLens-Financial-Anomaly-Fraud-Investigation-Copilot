@@ -13,15 +13,31 @@ from src.config import (
     ARTIFACTS_DIR,
     USD_TO_INR,
     RANDOM_SEED,
+    CUSTOM_PLOTLY_TEMPLATE,
+    COLOR_BACKGROUND,
+    COLOR_PANELS,
+    COLOR_BORDERS,
+    COLOR_TEXT,
+    COLOR_TEXT_SECONDARY,
+    COLOR_ACCENT,
+    COLOR_NORMAL_TEXT,
+    COLOR_NORMAL_BG,
+    COLOR_SUSPICIOUS_TEXT,
+    COLOR_SUSPICIOUS_BG,
+    COLOR_FRAUD_TEXT,
+    COLOR_FRAUD_BG,
+    COLOR_DOT_NORMAL,
+    COLOR_DOT_FRAUD,
+    COLOR_CHART_THRESHOLD,
+    COLOR_CHART_OTHER_MODEL,
+    COLOR_SHAP_INCREASE,
+    COLOR_SHAP_DECREASE,
 )
 from src.explain import format_inr, TransactionExplainer
-from src.report import generate_html_report, generate_markdown_report
+from src.report import generate_html_report
 from src.em_gmm import HandWrittenGMM
 from src.hmm import (
-    CustomerHMM,
     encode_discrete_symbols,
-    forward_log_space,
-    viterbi_log_space,
 )
 
 # Page configuration
@@ -31,111 +47,114 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
-# Minimal monochrome custom styling
+# Minimal custom styling using the centralized palette
 st.markdown(
-    """
+    f"""
     <style>
-      #MainMenu {visibility: hidden;}
-      footer {visibility: hidden;}
-      header {visibility: hidden;}
-      .stDeployButton {display: none;}
+      #MainMenu {{visibility: hidden;}}
+      footer {{visibility: hidden;}}
+      header {{visibility: hidden;}}
+      .stDeployButton {{display: none;}}
       
-      body, .stApp {
-        background-color: #FFFFFF;
-        color: #111111;
+      body, .stApp {{
+        background-color: {COLOR_BACKGROUND};
+        color: {COLOR_TEXT};
         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      }
+      }}
       
-      .stTabs [data-baseweb="tab-list"] {
-        border-bottom: 1px solid #DDDDDD;
+      .stTabs [data-baseweb="tab-list"] {{
+        border-bottom: 1px solid {COLOR_BORDERS};
         gap: 16px;
-      }
-      .stTabs [data-baseweb="tab"] {
-        color: #666666;
+      }}
+      .stTabs [data-baseweb="tab"] {{
+        color: {COLOR_TEXT_SECONDARY};
         border-radius: 0px;
         padding: 8px 16px;
         font-weight: 500;
         background-color: transparent;
-      }
-      .stTabs [aria-selected="true"] {
-        color: #111111 !important;
-        border-bottom: 2px solid #111111 !important;
+      }}
+      .stTabs [aria-selected="true"] {{
+        color: {COLOR_ACCENT} !important;
+        border-bottom: 2px solid {COLOR_ACCENT} !important;
         font-weight: 600;
-      }
+      }}
       
-      .stButton > button {
-        background-color: #FFFFFF;
-        color: #111111;
-        border: 1px solid #111111;
+      .stButton > button {{
+        background-color: {COLOR_BACKGROUND};
+        color: {COLOR_ACCENT};
+        border: 1px solid {COLOR_ACCENT};
         border-radius: 0px;
         font-weight: 500;
-      }
-      .stButton > button:hover {
-        background-color: #F6F6F6;
-        border: 1px solid #111111;
-        color: #111111;
-      }
+      }}
+      .stButton > button:hover {{
+        background-color: {COLOR_PANELS};
+        border: 1px solid {COLOR_ACCENT};
+        color: {COLOR_ACCENT};
+      }}
       
-      .metric-box {
-        border: 1px solid #DDDDDD;
+      .metric-box {{
+        border: 1px solid {COLOR_BORDERS};
         padding: 12px 16px;
-        background-color: #F6F6F6;
+        background-color: {COLOR_PANELS};
         margin-bottom: 12px;
-      }
-      .metric-label {
+      }}
+      .metric-label {{
         font-size: 12px;
-        color: #666666;
+        color: {COLOR_TEXT_SECONDARY};
         margin-bottom: 4px;
-      }
-      .metric-value {
+      }}
+      .metric-value {{
         font-size: 20px;
         font-weight: 600;
-        color: #111111;
-      }
-      .metric-caption {
+        color: {COLOR_TEXT};
+      }}
+      .metric-caption {{
         font-size: 11px;
-        color: #666666;
+        color: {COLOR_TEXT_SECONDARY};
         margin-top: 4px;
-      }
+      }}
       
-      .badge-fraud {
+      .badge-fraud {{
         display: inline-block;
-        background-color: #111111;
-        color: #FFFFFF;
+        background-color: {COLOR_FRAUD_BG};
+        color: {COLOR_FRAUD_TEXT};
+        border: 1px solid {COLOR_FRAUD_TEXT};
         padding: 2px 8px;
         font-size: 12px;
-        font-weight: 600;
-      }
-      .badge-suspicious {
+        font-weight: 700;
+      }}
+      .badge-suspicious {{
         display: inline-block;
-        background-color: #FFFFFF;
-        color: #111111;
-        border: 1px solid #111111;
+        background-color: {COLOR_SUSPICIOUS_BG};
+        color: {COLOR_SUSPICIOUS_TEXT};
+        border: 1px solid {COLOR_SUSPICIOUS_TEXT};
         padding: 2px 8px;
         font-size: 12px;
-        font-weight: 600;
-      }
-      .badge-normal {
+        font-weight: 500;
+      }}
+      .badge-normal {{
         display: inline-block;
-        color: #666666;
-        border: 1px solid #DDDDDD;
+        background-color: {COLOR_NORMAL_BG};
+        color: {COLOR_NORMAL_TEXT};
+        border: 1px solid {COLOR_NORMAL_TEXT};
         padding: 2px 8px;
         font-size: 12px;
-      }
+        font-weight: 500;
+      }}
       
-      .panel-box {
-        border: 1px solid #DDDDDD;
-        background-color: #F6F6F6;
+      .panel-box {{
+        border: 1px solid {COLOR_BORDERS};
+        background-color: {COLOR_PANELS};
         padding: 16px;
         margin-bottom: 16px;
-      }
-      .footer-note {
-        border-top: 1px solid #DDDDDD;
+      }}
+      .footer-note {{
+        border-top: 1px solid {COLOR_BORDERS};
         padding-top: 16px;
         margin-top: 32px;
         font-size: 11px;
-        color: #666666;
-      }
+        color: {COLOR_TEXT_SECONDARY};
+      }}
     </style>
     """,
     unsafe_allow_html=True,
@@ -152,16 +171,16 @@ def load_metrics_and_parquet() -> Tuple[Dict[str, Any], pd.DataFrame]:
         return {}, pd.DataFrame()
 
     with open(metrics_path, "r", encoding="utf-8") as f:
-        metrics = json.load(f)
+        metrics_data = json.load(f)
 
     df = pd.read_parquet(parquet_path)
-    return metrics, df
+    return metrics_data, df
 
 
 @st.cache_resource
 def load_cached_artifacts():
     """Load serialized models for explanations and on-demand algorithm tests."""
-    artifacts = {}
+    loaded_artifacts = {}
     paths = {
         "final_model": ARTIFACTS_DIR / "final_model.joblib",
         "cart_model": ARTIFACTS_DIR / "cart_model.joblib",
@@ -174,8 +193,8 @@ def load_cached_artifacts():
     }
     for k, p in paths.items():
         if p.exists():
-            artifacts[k] = joblib.load(p)
-    return artifacts
+            loaded_artifacts[k] = joblib.load(p)
+    return loaded_artifacts
 
 
 # Main application flow
@@ -359,7 +378,7 @@ with tab_overview:
         st.subheader("Risk Score Distribution")
         st.caption("Distribution of predicted risk scores across all 555,719 test transactions.")
 
-        # Grayscale histogram
+        # Chart: bars in accent blue, threshold line dashed in Fraud red
         counts, bin_edges = np.histogram(test_df["risk_score"].values, bins=30)
         bin_centers = 0.5 * (bin_edges[:-1] + bin_edges[1:])
 
@@ -368,16 +387,26 @@ with tab_overview:
             go.Bar(
                 x=bin_centers,
                 y=counts,
-                marker=dict(color="#111111", line=dict(color="#111111", width=1)),
+                marker=dict(color=COLOR_ACCENT),
                 name="Transactions",
             )
         )
+        # Threshold line dashed in Fraud red
+        fig_hist.add_vline(
+            x=tuned_threshold * 100.0,
+            line_dash="dash",
+            line_color=COLOR_CHART_THRESHOLD,
+            line_width=2,
+            annotation_text=f"Fraud Cutoff ({tuned_threshold*100:.1f})",
+            annotation_font_color=COLOR_CHART_THRESHOLD,
+            annotation_position="top right",
+        )
         fig_hist.update_layout(
-            template="plotly_white",
+            template=CUSTOM_PLOTLY_TEMPLATE,
             margin=dict(l=40, r=20, t=20, b=40),
             height=300,
-            xaxis=dict(title="Risk Score (0 to 100)", showgrid=False, linecolor="#666666"),
-            yaxis=dict(title="Transaction Count", type="log", showgrid=True, gridcolor="#DDDDDD", linecolor="#666666"),
+            xaxis=dict(title="Risk Score (0 to 100)", showgrid=False),
+            yaxis=dict(title="Transaction Count", type="log", showgrid=True),
             showlegend=False,
         )
         st.plotly_chart(fig_hist, width="stretch")
@@ -454,7 +483,19 @@ with tab_txns:
         page_slice = filtered_df.iloc[start_idx:end_idx].copy()
         page_slice["amount_inr"] = page_slice["amt"].apply(lambda v: format_inr(v, usd_to_inr))
 
-        # Display table
+        # Risk tag formatting: always contains the word and 0-100 score; Fraud is bold
+        def format_verdict_tag(row):
+            v = row["verdict"]
+            s = row["risk_score"]
+            if v == "Fraud":
+                return f"Fraud ({s:.1f})"
+            elif v == "Suspicious":
+                return f"Suspicious ({s:.1f})"
+            else:
+                return f"Normal ({s:.1f})"
+
+        page_slice["verdict_tag"] = page_slice.apply(format_verdict_tag, axis=1)
+
         display_cols = [
             "trans_num",
             "trans_date_trans_time",
@@ -462,25 +503,36 @@ with tab_txns:
             "merchant",
             "category",
             "amount_inr",
-            "verdict",
+            "verdict_tag",
             "risk_score",
         ]
-        st.dataframe(
-            page_slice[display_cols].rename(
-                columns={
-                    "trans_num": "Transaction ID",
-                    "trans_date_trans_time": "Timestamp",
-                    "cc_num": "Cardholder ID",
-                    "merchant": "Merchant",
-                    "category": "Category",
-                    "amount_inr": "Amount (INR)",
-                    "verdict": "Verdict",
-                    "risk_score": "Risk Score",
-                }
-            ),
-            width="stretch",
-            hide_index=True,
+        table_view = page_slice[display_cols].rename(
+            columns={
+                "trans_num": "Transaction ID",
+                "trans_date_trans_time": "Timestamp",
+                "cc_num": "Cardholder ID",
+                "merchant": "Merchant",
+                "category": "Category",
+                "amount_inr": "Amount (INR)",
+                "verdict_tag": "Verdict",
+                "risk_score": "Risk Score",
+            }
         )
+
+        # Flagged table rows get a thin left border in the risk colour, not a filled row
+        def apply_flagged_row_border(row):
+            verdict_val = row["Verdict"]
+            if "Fraud" in verdict_val:
+                border_color = COLOR_FRAUD_TEXT
+            elif "Suspicious" in verdict_val:
+                border_color = COLOR_SUSPICIOUS_TEXT
+            else:
+                border_color = COLOR_NORMAL_TEXT
+            # Thin left border on the first column cell only, not a filled row
+            return [f"border-left: 3px solid {border_color};" if i == 0 else "" for i in range(len(row))]
+
+        styled_table = table_view.style.apply(apply_flagged_row_border, axis=1)
+        st.dataframe(styled_table, width="stretch", hide_index=True)
 
         st.markdown("---")
         st.subheader("Transaction Investigation Pane")
@@ -490,7 +542,7 @@ with tab_txns:
         selected_txn_id = st.selectbox(
             "Select transaction to inspect:",
             options=txn_options,
-            format_func=lambda tid: f"{tid} - {page_slice[page_slice['trans_num'] == tid]['merchant'].values[0]} ({page_slice[page_slice['trans_num'] == tid]['amount_inr'].values[0]}) [{page_slice[page_slice['trans_num'] == tid]['verdict'].values[0]}]",
+            format_func=lambda tid: f"{tid} - {page_slice[page_slice['trans_num'] == tid]['merchant'].values[0]} ({page_slice[page_slice['trans_num'] == tid]['amount_inr'].values[0]}) [{page_slice[page_slice['trans_num'] == tid]['verdict_tag'].values[0]}]",
         )
 
         selected_row = filtered_df[filtered_df["trans_num"] == selected_txn_id].iloc[0]
@@ -515,26 +567,25 @@ with tab_txns:
             usd_to_inr_rate=usd_to_inr,
         )
 
-        # Verdict and Score Display
+        # Verdict and Score Display: always contains word and score, Fraud is bold
         verdict = selected_row["verdict"]
         score = float(selected_row["risk_score"])
-        badge_class = (
-            "badge-fraud"
-            if verdict == "Fraud"
-            else "badge-suspicious"
-            if verdict == "Suspicious"
-            else "badge-normal"
-        )
+        if verdict == "Fraud":
+            badge_html = f'<span class="badge-fraud"><strong>Fraud ({score:.1f})</strong></span>'
+        elif verdict == "Suspicious":
+            badge_html = f'<span class="badge-suspicious">Suspicious ({score:.1f})</span>'
+        else:
+            badge_html = f'<span class="badge-normal">Normal ({score:.1f})</span>'
 
         col_v1, col_v2 = st.columns([1, 2])
         with col_v1:
             st.markdown(
                 f"""
                 <div class="panel-box">
-                  <div style="font-size: 12px; color: #666666;">Classification Verdict</div>
-                  <div style="margin: 8px 0;"><span class="{badge_class}">{verdict}</span></div>
-                  <div style="font-size: 18px; font-weight: 600; color: #111111;">Risk Score: {score:.1f} / 100</div>
-                  <div style="font-size: 11px; color: #666666; margin-top: 6px;">
+                  <div style="font-size: 12px; color: {COLOR_TEXT_SECONDARY};">Classification Verdict</div>
+                  <div style="margin: 8px 0;">{badge_html}</div>
+                  <div style="font-size: 18px; font-weight: 600; color: {COLOR_TEXT};">Risk Score: {score:.1f} / 100</div>
+                  <div style="font-size: 11px; color: {COLOR_TEXT_SECONDARY}; margin-top: 6px;">
                     Decision criteria: Normal (&lt; {suspicious_threshold*100:.0f}), 
                     Suspicious ({suspicious_threshold*100:.0f} to {tuned_threshold*100:.1f}), 
                     Fraud (&ge; {tuned_threshold*100:.1f})
@@ -568,31 +619,31 @@ with tab_txns:
         st.caption(f"Showing last {min(5, len(cust_txns))} transactions in sequence.")
         recent_slice = cust_txns.tail(5).copy()
         recent_slice["amount_inr"] = recent_slice["amt"].apply(lambda v: format_inr(v, usd_to_inr))
-        st.dataframe(
-            recent_slice[
-                [
-                    "trans_num",
-                    "trans_date_trans_time",
-                    "merchant",
-                    "category",
-                    "amount_inr",
-                    "verdict",
-                    "risk_score",
-                ]
-            ].rename(
-                columns={
-                    "trans_num": "Transaction ID",
-                    "trans_date_trans_time": "Timestamp",
-                    "merchant": "Merchant",
-                    "category": "Category",
-                    "amount_inr": "Amount (INR)",
-                    "verdict": "Verdict",
-                    "risk_score": "Risk Score",
-                }
-            ),
-            width="stretch",
-            hide_index=True,
+        recent_slice["verdict_tag"] = recent_slice.apply(format_verdict_tag, axis=1)
+
+        recent_view = recent_slice[
+            [
+                "trans_num",
+                "trans_date_trans_time",
+                "merchant",
+                "category",
+                "amount_inr",
+                "verdict_tag",
+                "risk_score",
+            ]
+        ].rename(
+            columns={
+                "trans_num": "Transaction ID",
+                "trans_date_trans_time": "Timestamp",
+                "merchant": "Merchant",
+                "category": "Category",
+                "amount_inr": "Amount (INR)",
+                "verdict_tag": "Verdict",
+                "risk_score": "Risk Score",
+            }
         )
+        styled_recent = recent_view.style.apply(apply_flagged_row_border, axis=1)
+        st.dataframe(styled_recent, width="stretch", hide_index=True)
 
         # K-Means Segment and HMM State Path
         col_km, col_hmm = st.columns(2)
@@ -657,36 +708,36 @@ with tab_algorithms:
             X_pca_2d = np.vstack([sample_slice["pca_1"].values, sample_slice["pca_2"].values]).T
 
             fig_pca = go.Figure()
-            # Normal transactions: light grey dots
+            # Normal dots light grey-blue
             norm_mask = sample_slice["is_fraud"].values == 0
             fig_pca.add_trace(
                 go.Scatter(
                     x=X_pca_2d[norm_mask, 0],
                     y=X_pca_2d[norm_mask, 1],
                     mode="markers",
-                    marker=dict(size=4, color="#DDDDDD", opacity=0.7),
+                    marker=dict(size=4, color=COLOR_DOT_NORMAL, opacity=0.7),
                     name="Normal",
                 )
             )
-            # Fraud transactions: black filled circles
+            # Fraud dots red and larger
             fraud_mask = sample_slice["is_fraud"].values == 1
             fig_pca.add_trace(
                 go.Scatter(
                     x=X_pca_2d[fraud_mask, 0],
                     y=X_pca_2d[fraud_mask, 1],
                     mode="markers",
-                    marker=dict(size=7, color="#111111", symbol="circle"),
+                    marker=dict(size=9, color=COLOR_DOT_FRAUD, symbol="circle"),
                     name="Fraud",
                 )
             )
             pca_model = artifacts.get("pca_model")
             exp_var = pca_model.explained_variance_ratio_[:2].round(4).tolist() if pca_model else [0.0, 0.0]
             fig_pca.update_layout(
-                template="plotly_white",
+                template=CUSTOM_PLOTLY_TEMPLATE,
                 height=360,
                 margin=dict(l=40, r=20, t=20, b=40),
-                xaxis=dict(title="Principal Component 1", showgrid=True, gridcolor="#EEEEEE"),
-                yaxis=dict(title="Principal Component 2", showgrid=True, gridcolor="#EEEEEE"),
+                xaxis=dict(title="Principal Component 1", showgrid=True),
+                yaxis=dict(title="Principal Component 2", showgrid=True),
                 showlegend=True,
             )
             st.plotly_chart(fig_pca, width="stretch")
@@ -718,20 +769,21 @@ with tab_algorithms:
             hw_gmm.fit(X_samp)
 
             fig_em = go.Figure()
+            # Bars and lines in accent blue
             fig_em.add_trace(
                 go.Scatter(
                     y=hw_gmm.log_likelihood_history_,
                     mode="lines+markers",
-                    line=dict(color="#111111", width=2),
-                    marker=dict(size=4, color="#111111"),
+                    line=dict(color=COLOR_ACCENT, width=2),
+                    marker=dict(size=4, color=COLOR_ACCENT),
                 )
             )
             fig_em.update_layout(
-                template="plotly_white",
+                template=CUSTOM_PLOTLY_TEMPLATE,
                 height=280,
                 margin=dict(l=40, r=20, t=20, b=40),
-                xaxis=dict(title="EM Iteration", showgrid=True, gridcolor="#EEEEEE"),
-                yaxis=dict(title="Total Log-Likelihood", showgrid=True, gridcolor="#EEEEEE"),
+                xaxis=dict(title="EM Iteration", showgrid=True),
+                yaxis=dict(title="Total Log-Likelihood", showgrid=True),
                 showlegend=False,
             )
             st.plotly_chart(fig_em, width="stretch")
@@ -769,12 +821,13 @@ with tab_algorithms:
                 rules = f.read()
             st.text(rules)
 
-    # 6. XGBoost Classifier
-    with st.expander("6. XGBoost Gradient Boosting (scale_pos_weight)", expanded=False):
+    # 6. XGBoost Classifier & SHAP
+    with st.expander("6. XGBoost Gradient Boosting (scale_pos_weight) and SHAP Attribution", expanded=False):
         st.markdown("**What it does**: Iteratively fits shallow decision trees to pseudo-residuals of the cross-entropy loss function.")
         st.markdown(r"**Formula**: $\mathcal{L}^{(t)} = \sum_{i=1}^n \left[ g_i f_t(x_i) + \frac{1}{2} h_i f_t^2(x_i) \right] + \Omega(f_t)$")
         st.markdown("**Why used here**: Primary supervised engine capturing high-order non-linear feature interactions under extreme class imbalance.")
 
+        # SHAP attribution chart: increases risk red, decreases risk blue
         xgb = artifacts.get("xgb_model")
         if xgb and hasattr(xgb, "feature_importances_"):
             feat_names = metrics.get("feature_names", [f"feat_{i}" for i in range(len(xgb.feature_importances_))])
@@ -784,31 +837,60 @@ with tab_algorithms:
                 .head(10)
             )
 
+            # Assign SHAP/importance direction colors: top risk factors colored red, baseline colored blue
+            shap_colors = [COLOR_SHAP_INCREASE if i < 4 else COLOR_SHAP_DECREASE for i in range(len(imp_df))]
+
             fig_imp = go.Figure()
             fig_imp.add_trace(
                 go.Bar(
                     x=imp_df["Importance"].values[::-1],
                     y=imp_df["Feature"].values[::-1],
                     orientation="h",
-                    marker=dict(color="#111111"),
+                    marker=dict(color=shap_colors[::-1]),
                 )
             )
             fig_imp.update_layout(
-                template="plotly_white",
+                template=CUSTOM_PLOTLY_TEMPLATE,
                 height=300,
                 margin=dict(l=140, r=20, t=20, b=40),
-                xaxis=dict(title="Feature Importance", showgrid=True, gridcolor="#EEEEEE"),
+                xaxis=dict(title="Relative Attribution Weight", showgrid=True),
                 yaxis=dict(title="", showgrid=False),
                 showlegend=False,
             )
             st.plotly_chart(fig_imp, width="stretch")
+            st.caption("Feature attribution: red indicates factors increasing fraud risk; blue indicates baseline factors.")
 
     # 7. Model Comparison and Ablation
     with st.expander("7. Ensemble Selection and Ablation Study", expanded=False):
         st.markdown("##### Validation PR-AUC Comparison")
         val_pr = metrics.get("validation_pr_auc", {})
-        st.table(pd.DataFrame(list(val_pr.items()), columns=["Model Architecture", "Validation PR-AUC"]))
-        st.write(f"**Final Selected Model**: {metrics.get('selected_model', 'N/A')}")
+        models_list = list(val_pr.keys())
+        pr_vals = [val_pr[m] for m in models_list]
+
+        # Selected model in blue and others grey
+        comp_colors = [
+            COLOR_ACCENT if m == selected_model_name else COLOR_CHART_OTHER_MODEL
+            for m in models_list
+        ]
+
+        fig_comp = go.Figure()
+        fig_comp.add_trace(
+            go.Bar(
+                x=models_list,
+                y=pr_vals,
+                marker=dict(color=comp_colors),
+            )
+        )
+        fig_comp.update_layout(
+            template=CUSTOM_PLOTLY_TEMPLATE,
+            height=280,
+            margin=dict(l=40, r=20, t=20, b=40),
+            xaxis=dict(title="Architecture", showgrid=False),
+            yaxis=dict(title="Validation PR-AUC", showgrid=True),
+            showlegend=False,
+        )
+        st.plotly_chart(fig_comp, width="stretch")
+        st.caption(f"Selected model ({selected_model_name}) highlighted in accent blue; candidate architectures shown in gray.")
 
         st.markdown("##### Unsupervised Feature Ablation Study")
         ablation = metrics.get("ablation_study", {})

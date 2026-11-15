@@ -4,7 +4,7 @@
 AuditLens is a lightweight, high-performance credit card fraud review and investigation web application. It flags transactions into Normal, Suspicious, or Fraud, explains why using plain-English behavioral justifications, and generates formal monochrome audit reports. The project uses the Sparkov synthetic fraud dataset, strictly enforces chronological splitting and causal feature engineering, and features transparent implementations of K-Means, EM-GMM, HMM (Forward and Viterbi), PCA, CART, and XGBoost.
 
 ## Architecture Decisions
-- **Strict Grayscale UI**: Minimal academic aesthetic using only black (#111111), white (#FFFFFF), and grays (#666666, #DDDDDD, #F6F6F6). No accent colors, no emojis, no decorative icons.
+- **Refined Color Palette**: Minimal academic aesthetic using background (#FFFFFF), panels (#F5F7FA), borders (#D9DEE5), text (#1A1D21), secondary text (#5C6670), accent blue (#1F4E8C), and high-contrast risk colors (Normal #2E6B3F on #EAF3EC, Suspicious #8A5A00 on #FBF1DC, Fraud #9B1C1C on #FBE9E9). No emojis, no decorative icons.
 - **Causal Feature Engineering**: Per-customer chronological accumulators compute transaction frequency, time since last transaction, and amount z-scores using historical transactions only. Scalers and categorical encodings are fitted strictly on the train split.
 - **Hand-written Algorithms with Validation**: Hand-written Expectation-Maximization for GMM and Forward/Viterbi for HMM in NumPy, mathematically verified against scikit-learn and hmmlearn in automated unit tests.
 - **Precomputed Test Artifacts**: All test-set transactions are scored and saved to Parquet during training to ensure instant UI responsiveness without raw CSV parsing.
