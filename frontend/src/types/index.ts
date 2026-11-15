@@ -16,6 +16,7 @@ export interface HealthResponse {
 
 export type ActiveTab =
   | 'overview'
+  | 'demo'
   | 'workspace'
   | 'algorithms'
   | 'models'
@@ -24,6 +25,45 @@ export type ActiveTab =
   | 'rag'
   | 'assistant'
   | 'settings';
+
+export interface DemoShapAttribution {
+  feature: string;
+  value: number;
+  shap_value: number;
+  impact: string;
+}
+
+export interface DemoTransaction {
+  id: number;
+  original_index: number;
+  time: number;
+  amount: number;
+  category: string;
+  ground_truth_class: number;
+  predicted_probability: number | null;
+  anomaly_score: number | null;
+  is_suspicious_prediction: boolean | null;
+  risk_level: 'CRITICAL' | 'HIGH' | 'ELEVATED' | 'LOW' | null;
+  top_shap_features: DemoShapAttribution[] | null;
+  features: Record<string, number>;
+}
+
+export interface DemoRunResponse {
+  status: string;
+  total_transactions: number;
+  flagged_suspicious_count: number;
+  confirmed_fraud_count: number;
+  true_positives: number;
+  false_positives: number;
+  false_negatives: number;
+  precision: number;
+  recall: number;
+  f1_score: number;
+  decision_threshold: number;
+  execution_time_ms: number;
+  transactions: DemoTransaction[];
+  summary_narrative: string;
+}
 
 // Dataset & Preprocessing Types
 export interface TransactionRow {

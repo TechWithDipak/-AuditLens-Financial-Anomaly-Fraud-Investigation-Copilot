@@ -1,6 +1,7 @@
 import React from 'react';
 import {
   LayoutDashboard,
+  Sparkles,
   Database,
   Cpu,
   BarChart3,
@@ -20,6 +21,7 @@ interface SidebarProps {
 export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onSelectTab }) => {
   const navItems = [
     { id: 'overview' as ActiveTab, label: 'Overview', icon: LayoutDashboard },
+    { id: 'demo' as ActiveTab, label: 'Interactive Demo', icon: Sparkles, badge: 'Guided' },
     { id: 'workspace' as ActiveTab, label: 'Data Workspace', icon: Database },
     { id: 'algorithms' as ActiveTab, label: 'Algorithm Lab', icon: Cpu, badge: '9 Algos' },
     { id: 'models' as ActiveTab, label: 'Model Comparison', icon: BarChart3 },

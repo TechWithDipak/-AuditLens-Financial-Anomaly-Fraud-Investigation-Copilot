@@ -4,6 +4,7 @@ import { Sidebar } from './components/layout/Sidebar';
 import { checkHealth } from './services/api';
 import { HealthResponse, ActiveTab } from './types';
 import { OverviewTab } from './components/tabs/OverviewTab';
+import { DemoTab } from './components/tabs/DemoTab';
 import { DataWorkspaceTab } from './components/tabs/DataWorkspaceTab';
 import { AlgorithmLabTab } from './components/tabs/AlgorithmLabTab';
 import { ModelComparisonTab } from './components/tabs/ModelComparisonTab';
@@ -50,6 +51,8 @@ export const App: React.FC = () => {
               onSelectTab={setActiveTab}
             />
           )}
+
+          {activeTab === 'demo' && <DemoTab onNavigateToTab={setActiveTab} />}
 
           {activeTab === 'workspace' && <DataWorkspaceTab />}
 

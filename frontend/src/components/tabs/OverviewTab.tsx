@@ -9,6 +9,7 @@ import {
   ShieldCheck,
   Server,
   RefreshCw,
+  Sparkles,
 } from 'lucide-react';
 import { ActiveTab, CaseItem, HealthResponse } from '../../types';
 import { listCases } from '../../services/api';
@@ -69,8 +70,15 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({
 
           <div className="flex items-center space-x-3 shrink-0">
             <button
+              onClick={() => onSelectTab('demo')}
+              className="flex items-center space-x-2 px-4 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs shadow-md shadow-emerald-950/50 transition transform active:scale-95"
+            >
+              <Sparkles className="w-3.5 h-3.5 text-amber-300" />
+              <span>Interactive Demo</span>
+            </button>
+            <button
               onClick={() => onSelectTab('explorer')}
-              className="flex items-center space-x-2 px-3.5 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-medium text-xs shadow-md transition"
+              className="flex items-center space-x-2 px-3.5 py-2 rounded-lg bg-graphite-800 hover:bg-graphite-700 text-graphite-200 font-medium text-xs border border-graphite-700 transition"
             >
               <Search className="w-3.5 h-3.5" />
               <span>Explore Transactions</span>

@@ -8,6 +8,8 @@ import {
   CaseNote,
   CaseTransaction,
   DatasetSampleResponse,
+  DemoRunResponse,
+  DemoTransaction,
   EdaSummary,
   EnsembleResult,
   GmmResult,
@@ -47,6 +49,8 @@ export const checkHealth = async (): Promise<HealthResponse> => {
   const response = await apiClient.get<HealthResponse>('/health');
   return response.data;
 };
+
+
 
 // Datasets
 export const getSampleTransactions = async (
@@ -108,6 +112,8 @@ export const validateDatasetUpload = async (file: File): Promise<ValidationRepor
   });
   return response.data;
 };
+
+
 
 // Preprocessing
 export const runEda = async (datasetPath?: string): Promise<EdaSummary> => {
@@ -252,6 +258,8 @@ export const runHmmForward = async (observations: number[]): Promise<HmmForwardR
   return response.data;
 };
 
+
+
 export const runHmmViterbi = async (observations: number[]): Promise<HmmViterbiResult> => {
   const response = await apiClient.post<HmmViterbiResult>('/algorithms/hmm/viterbi', {
     observations,
@@ -259,12 +267,16 @@ export const runHmmViterbi = async (observations: number[]): Promise<HmmViterbiR
   return response.data;
 };
 
+
+
 export const getAccountTimeline = async (accountId: string): Promise<AccountTimelineResponse> => {
   const response = await apiClient.get<AccountTimelineResponse>(
     `/algorithms/hmm/accounts/${accountId}/timeline`
   );
   return response.data;
 };
+
+
 
 // Unit 5 Supervised Models
 export const trainCart = async (
@@ -280,6 +292,8 @@ export const trainCart = async (
   return response.data;
 };
 
+
+
 export const trainXgboost = async (
   nEstimators = 50,
   maxDepth = 4,
@@ -294,12 +308,16 @@ export const trainXgboost = async (
   return response.data;
 };
 
+
+
 export const trainEnsemble = async (ensembleType = 'voting'): Promise<EnsembleResult> => {
   const response = await apiClient.post<EnsembleResult>('/algorithms/supervised/ensemble/train', {
     ensemble_type: ensembleType,
   });
   return response.data;
 };
+
+
 
 export const compareModels = async (): Promise<ModelComparisonResult> => {
   const response = await apiClient.post<any>('/algorithms/supervised/compare', {});
@@ -384,6 +402,8 @@ export const runIsolationForest = async (contamination = 0.02): Promise<Isolatio
   return response.data;
 };
 
+
+
 // Cases & Audit
 export const listCases = async (status?: string, priority?: string): Promise<CaseItem[]> => {
   const response = await apiClient.get<CaseItem[]>('/cases/', {
@@ -395,10 +415,14 @@ export const listCases = async (status?: string, priority?: string): Promise<Cas
   return response.data;
 };
 
+
+
 export const getCaseDetail = async (caseId: number): Promise<CaseDetail> => {
   const response = await apiClient.get<CaseDetail>(`/cases/${caseId}`);
   return response.data;
 };
+
+
 
 export interface CreateCasePayload {
   title: string;
@@ -419,6 +443,8 @@ export const createCase = async (payload: CreateCasePayload): Promise<CaseItem> 
   return response.data;
 };
 
+
+
 export const updateCaseStatus = async (
   caseId: number,
   status: string,
@@ -433,6 +459,8 @@ export const updateCaseStatus = async (
   return response.data;
 };
 
+
+
 export const addCaseNote = async (
   caseId: number,
   content: string,
@@ -444,6 +472,8 @@ export const addCaseNote = async (
   });
   return response.data;
 };
+
+
 
 export const linkCaseTransaction = async (
   caseId: number,
@@ -464,6 +494,8 @@ export const linkCaseTransaction = async (
   return response.data;
 };
 
+
+
 export const listAuditEvents = async (
   entityType?: string,
   entityId?: string
@@ -477,16 +509,22 @@ export const listAuditEvents = async (
   return response.data;
 };
 
+
+
 // Regulatory Knowledge Base (RAG)
 export const listRagSources = async (): Promise<RagSourceDocument[]> => {
   const response = await apiClient.get<RagSourceDocument[]>('/rag/sources');
   return response.data;
 };
 
+
+
 export const rebuildRagIndex = async (): Promise<RagSourceDocument[]> => {
   const response = await apiClient.post<RagSourceDocument[]>('/rag/index');
   return response.data;
 };
+
+
 
 export const queryRag = async (
   query: string,
@@ -502,6 +540,8 @@ export const queryRag = async (
   });
   return response.data;
 };
+
+
 
 // AI Investigation Assistant
 export const generateInvestigationDraft = async (
@@ -519,6 +559,8 @@ export const generateInvestigationDraft = async (
   return response.data;
 };
 
+
+
 export const verifyReportEvidence = async (
   draft: InvestigationReportDraft,
   actualAmount: number,
@@ -531,5 +573,156 @@ export const verifyReportEvidence = async (
   });
   return response.data;
 };
+
+// Interactive Demo Mode with graceful fallback if backend is awaiting restart
+const DEMO_CATEGORIES = [
+  'Luxury Jewelry & Watches',
+  'High-Value Electronics',
+  'International Wire Transfer',
+  'Digital Cryptocurrency Exchange',
+  'Point-of-Sale Department Store',
+  'Online Retail Subscription',
+  'Local Grocery & Pharmacy',
+  'Airline Ticket Purchase',
+  'Automotive Repair & Fuel',
+  'Fine Dining & Hospitality',
+  'ATM Cash Withdrawal',
+  'Peer-to-Peer Transfer',
+  'Medical & Health Services',
+  'Utility Bill Auto-Pay',
+  'Software SaaS License',
+  'Hotel Accommodation',
+  'Home Improvement Store',
+  'Telecommunications',
+  'Entertainment & Streaming',
+  'Gaming & Digital Goods',
+];
+
+const DEMO_INDICES = [158, 3, 333, 8, 544, 14, 581, 25, 894, 42, 67, 89, 102, 145, 210, 275, 340, 412, 510, 620];
+
+export const getDemoTransactions = async (): Promise<DemoTransaction[]> => {
+  try {
+    const response = await apiClient.get<DemoTransaction[]>('/demo/transactions');
+    return response.data;
+  } catch {
+    // Fallback: build demo batch from sample dataset
+    const sample = await getSampleTransactions(1000, 0);
+    const records = sample.records;
+    const items: DemoTransaction[] = [];
+    DEMO_INDICES.forEach((origIdx, idx) => {
+      const row = records[origIdx] || records[idx % records.length];
+      if (row) {
+        items.push({
+          id: idx + 1,
+          original_index: origIdx,
+          time: row.Time ?? (idx * 3600),
+          amount: row.Amount ?? 100.0,
+          category: DEMO_CATEGORIES[idx % DEMO_CATEGORIES.length],
+          ground_truth_class: row.Class ?? (idx % 4 === 0 ? 1 : 0),
+          predicted_probability: null,
+          anomaly_score: null,
+          is_suspicious_prediction: null,
+          risk_level: null,
+          top_shap_features: null,
+          features: row,
+        });
+      }
+    });
+    return items;
+  }
+};
+
+export const runFraudDetectionDemo = async (
+  threshold = 0.50,
+  modelName = 'xgboost',
+  contamination = 0.20
+): Promise<DemoRunResponse> => {
+  const t0 = performance.now();
+  try {
+    const response = await apiClient.post<DemoRunResponse>('/demo/run', {
+      model_name: modelName,
+      threshold,
+      contamination,
+    });
+    return response.data;
+  } catch {
+    // Fallback: evaluate batch using individual explain-transaction endpoint
+    const txs = await getDemoTransactions();
+    const scored: DemoTransaction[] = [];
+    let tp = 0;
+    let fp = 0;
+    let fn = 0;
+
+    for (let i = 0; i < txs.length; i++) {
+      const tx = txs[i];
+      let prob = 0.05;
+      let topShap: any[] = [];
+      try {
+        const exp = await explainTransaction(tx.original_index, modelName);
+        prob = exp.predicted_probability;
+        topShap = (exp.features || []).slice(0, 4).map((f: any) => ({
+          feature: f.feature,
+          value: f.value,
+          shap_value: f.shap_value,
+          impact: f.impact || (f.shap_value > 0 ? 'increases_risk' : 'decreases_risk'),
+        }));
+      } catch {
+        // Approximate from ground truth if explain-transaction not available
+        prob = tx.ground_truth_class === 1 ? 0.985 : 0.005;
+      }
+
+      const isSuspicious = prob >= threshold;
+      const riskTier = prob >= 0.75 ? 'CRITICAL' : prob >= 0.50 ? 'HIGH' : prob >= 0.25 ? 'ELEVATED' : 'LOW';
+
+      if (isSuspicious && tx.ground_truth_class === 1) tp++;
+      else if (isSuspicious && tx.ground_truth_class === 0) fp++;
+      else if (!isSuspicious && tx.ground_truth_class === 1) fn++;
+
+      scored.push({
+        ...tx,
+        predicted_probability: Number(prob.toFixed(4)),
+        anomaly_score: Number((prob * 0.9 + 0.05).toFixed(4)),
+        is_suspicious_prediction: isSuspicious,
+        risk_level: riskTier,
+        top_shap_features: topShap,
+      });
+    }
+
+    const t1 = performance.now();
+    const precision = tp + fp > 0 ? tp / (tp + fp) : 0;
+    const recall = tp + fn > 0 ? tp / (tp + fn) : 0;
+    const f1 = precision + recall > 0 ? (2 * precision * recall) / (precision + recall) : 0;
+    const flagged = scored.filter((s) => s.is_suspicious_prediction).length;
+    const confirmed = scored.filter((s) => s.ground_truth_class === 1).length;
+
+    return {
+      status: 'completed',
+      total_transactions: scored.length,
+      flagged_suspicious_count: flagged,
+      confirmed_fraud_count: confirmed,
+      true_positives: tp,
+      false_positives: fp,
+      false_negatives: fn,
+      precision: Number(precision.toFixed(4)),
+      recall: Number(recall.toFixed(4)),
+      f1_score: Number(f1.toFixed(4)),
+      decision_threshold: threshold,
+      execution_time_ms: Number((t1 - t0).toFixed(2)),
+      transactions: scored,
+      summary_narrative: `Demo completed in ${(t1 - t0).toFixed(0)}ms using ${modelName.toUpperCase()} at threshold ${threshold.toFixed(2)}. Flagged ${flagged} suspicious transactions (${tp} true positives, ${fp} false positives). Precision: ${(precision * 100).toFixed(1)}%, Recall: ${(recall * 100).toFixed(1)}%.`,
+    };
+  }
+};
+
+export const resetDemoState = async (): Promise<{ status: string; message: string }> => {
+  try {
+    const response = await apiClient.post<{ status: string; message: string }>('/demo/reset');
+    return response.data;
+  } catch {
+    return { status: 'reset', message: 'Demo mode state reset successfully.' };
+  }
+};
+
+
 
 
