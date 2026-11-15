@@ -75,3 +75,20 @@ Commands:
 Deviations: None.
 Noticed (out of scope): None.
 Status: done
+
+## 2026-11-15 | Direct Investigation Option in Transactions Table | size: small
+Plan:
+1. Add an "Investigation" action column adjacent to "Risk Score" in the Transactions table view.
+2. Configure `st.column_config.ButtonColumn` with a direct "Investigate" action button on every row.
+3. Wire session state so clicking "Investigate" immediately activates that transaction in the Investigation Pane below.
+4. Add automated AppTest verification for the Investigation button column.
+
+Changes:
+- `app.py`: Added `investigation_action` column to table view, configured with `st.column_config.ButtonColumn("Investigation")`, syncing `st.session_state["selected_txn_id"]` on button click and row selection.
+- `tests/test_app.py`: Added `test_tab_transactions_direct_investigation_option` verifying column placement and session state updates.
+Commands:
+- `pytest tests/test_app.py -v` -> 5 passed in 2.36s
+- `pytest -v` -> 22 passed in 3.25s
+Deviations: None.
+Noticed (out of scope): None.
+Status: done

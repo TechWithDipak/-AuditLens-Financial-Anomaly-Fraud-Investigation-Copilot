@@ -102,7 +102,7 @@ Deliver AuditLens: a small, clean, high-performance web application that flags t
   - Tab 4: `How it works`
 - **Tab Details**:
   - `Overview`: Key metrics (Total Evaluated, Flagged Transactions, Detected Fraud Rate, Headline Test PR-AUC, ROC-AUC, Precision, Recall, F1), Risk Score Distribution histogram, Confusion Matrix table.
-  - `Transactions`: Filterable table by Risk Level (All, Fraud, Suspicious, Normal), Category, Date Range. Selecting a row reveals the investigation pane: Verdict badge, 0-100 score, 3-5 plain-English reasons, Customer Comparison table, Customer Recent Transactions, K-Means profile, HMM Viterbi state path, What to check next, Download Report button.
+  - `Transactions`: Filterable table by Risk Level (All, Fraud, Suspicious, Normal), Category, Date Range. Direct "Investigation" action button column adjacent to Risk Score in the table triggers instant loading of the transaction investigation pane upon click (also supports table row selection and search). Investigation pane details: Verdict badge, 0-100 score, 3-5 plain-English reasons, Customer Comparison table, Customer Recent Transactions, K-Means profile, HMM Viterbi state path, What to check next, Download Report button.
   - `Algorithms`: Interactive sections for K-Means, GMM, EM, PCA, HMM, Forward, Viterbi, CART, XGBoost, and Ensemble. Each section displays plain description, mathematical formula, rationale, interactive Run button, and real-time execution results.
   - `How it works`: End-to-end methodology, feature engineering logic, temporal split rationale, and synthetic dataset disclosure.
 
@@ -110,4 +110,5 @@ Deliver AuditLens: a small, clean, high-performance web application that flags t
 - **2026-11-15**: Initial specification and architecture definition.
 - **2026-11-15**: Full implementation completed. Model training achieved 0.9176 Test PR-AUC, 0.9981 ROC-AUC, 85.42% precision, 86.29% recall, and 0.8585 F1 at validation-tuned threshold 0.9500. All 16 unit, math, leakage, compliance, and AppTest UI tests passed.
 - **2026-11-15**: UI Colour Update completed. Centralized 12-color palette in `src/config.py` and `.streamlit/config.toml` with zero hex values in other source files. All text-on-color contrast ratios exceed 4.5:1 (up to 16.9:1). Applied custom Plotly template globally, thin left borders on flagged table rows, and updated all 21 automated tests.
+- **2026-11-15**: Added direct "Investigation" button column next to Risk Score in the Transactions table using `st.column_config.ButtonColumn`, enabling immediate forensic investigation pane activation on single click.
 

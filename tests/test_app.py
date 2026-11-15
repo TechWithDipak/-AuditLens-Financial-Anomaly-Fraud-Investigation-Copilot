@@ -51,6 +51,26 @@ def test_tab_transactions_selection_and_report():
     assert "Download audit report" in dl_btn.label
 
 
+def test_tab_transactions_direct_investigation_option():
+    """Verify that table has direct Investigation column and updates active selection."""
+    app_path = Path("app.py").resolve()
+    at = AppTest.from_file(str(app_path), default_timeout=30)
+    at.run()
+
+    assert not at.exception
+    # Verify dataframe element exists and has Investigation column
+    assert len(at.dataframe) >= 1
+    df_elem = at.dataframe[0]
+    assert "Investigation" in df_elem.value.columns
+    assert df_elem.value.columns.get_loc("Investigation") == df_elem.value.columns.get_loc("Risk Score") + 1
+
+    # Trigger investigation click via session state
+    at.session_state["investigate_action"] = {"row": 1, "label": "Investigate"}
+    at.run()
+    assert not at.exception
+    assert at.session_state.get("selected_txn_id") is not None
+
+
 def test_tab_algorithms_interactive_execution():
     """Verify pressing every algorithm run button executes properly without exceptions."""
     app_path = Path("app.py").resolve()

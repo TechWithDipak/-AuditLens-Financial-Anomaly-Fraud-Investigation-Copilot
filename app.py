@@ -495,6 +495,7 @@ with tab_txns:
                 return f"Normal ({s:.1f})"
 
         page_slice["verdict_tag"] = page_slice.apply(format_verdict_tag, axis=1)
+        page_slice["investigation_action"] = "Investigate"
 
         display_cols = [
             "trans_num",
@@ -505,6 +506,7 @@ with tab_txns:
             "amount_inr",
             "verdict_tag",
             "risk_score",
+            "investigation_action",
         ]
         table_view = page_slice[display_cols].rename(
             columns={
@@ -516,6 +518,7 @@ with tab_txns:
                 "amount_inr": "Amount (INR)",
                 "verdict_tag": "Verdict",
                 "risk_score": "Risk Score",
+                "investigation_action": "Investigation",
             }
         )
 
@@ -532,18 +535,54 @@ with tab_txns:
             return [f"border-left: 3px solid {border_color};" if i == 0 else "" for i in range(len(row))]
 
         styled_table = table_view.style.apply(apply_flagged_row_border, axis=1)
-        st.dataframe(styled_table, width="stretch", hide_index=True)
+
+        # Check if button in Investigation column was clicked
+        if "selected_txn_id" not in st.session_state and len(page_slice) > 0:
+            st.session_state["selected_txn_id"] = str(page_slice["trans_num"].iloc[0])
+
+        if "investigate_action" in st.session_state and st.session_state["investigate_action"] is not None:
+            click = st.session_state["investigate_action"]
+            clicked_row = click["row"] if isinstance(click, dict) else getattr(click, "row", None)
+            if clicked_row is not None and 0 <= clicked_row < len(page_slice):
+                st.session_state["selected_txn_id"] = str(page_slice.iloc[clicked_row]["trans_num"])
+
+        table_event = st.dataframe(
+            styled_table,
+            column_config={
+                "Investigation": st.column_config.ButtonColumn(
+                    "Investigation",
+                    help="Direct option to investigate this transaction",
+                    key="investigate_action",
+                ),
+            },
+            on_select="rerun",
+            selection_mode="single-row",
+            width="stretch",
+            hide_index=True,
+        )
+
+        if table_event.selection.rows:
+            sel_row = table_event.selection.rows[0]
+            if 0 <= sel_row < len(page_slice):
+                st.session_state["selected_txn_id"] = str(page_slice.iloc[sel_row]["trans_num"])
 
         st.markdown("---")
         st.subheader("Transaction Investigation Pane")
 
-        # Select transaction to inspect
+        # Select transaction to inspect (synced with session state)
         txn_options = list(page_slice["trans_num"].values)
+        default_idx = 0
+        current_sel = st.session_state.get("selected_txn_id")
+        if current_sel in txn_options:
+            default_idx = txn_options.index(current_sel)
+
         selected_txn_id = st.selectbox(
-            "Select transaction to inspect:",
+            "Selected transaction for investigation:",
             options=txn_options,
+            index=default_idx,
             format_func=lambda tid: f"{tid} - {page_slice[page_slice['trans_num'] == tid]['merchant'].values[0]} ({page_slice[page_slice['trans_num'] == tid]['amount_inr'].values[0]}) [{page_slice[page_slice['trans_num'] == tid]['verdict_tag'].values[0]}]",
         )
+        st.session_state["selected_txn_id"] = selected_txn_id
 
         selected_row = filtered_df[filtered_df["trans_num"] == selected_txn_id].iloc[0]
         cardholder_id = int(selected_row["cc_num"])
