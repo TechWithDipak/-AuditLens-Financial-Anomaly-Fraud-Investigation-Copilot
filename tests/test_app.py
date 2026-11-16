@@ -89,3 +89,36 @@ def test_tab_algorithms_interactive_execution():
         btn.click()
         at.run()
         assert not at.exception, f"Exception occurred after clicking button {i} ('{label}'): {at.exception}"
+
+
+def test_app_runs_in_environment_without_hmmlearn():
+    """Verify app runs without throwing exceptions when hmmlearn is missing from the environment."""
+    import subprocess
+    import sys
+
+    code = """
+import sys
+class DisallowHmmlearn:
+    def find_spec(self, fullname, path, target=None):
+        if 'hmmlearn' in fullname:
+            raise ModuleNotFoundError(f'No module named {fullname}')
+        return None
+sys.meta_path.insert(0, DisallowHmmlearn())
+for m in list(sys.modules.keys()):
+    if 'hmmlearn' in m:
+        del sys.modules[m]
+
+from streamlit.testing.v1 import AppTest
+at = AppTest.from_file('app.py', default_timeout=30)
+at.run()
+assert not at.exception, f'App crashed with: {at.exception}'
+print('SUCCESS_NO_HMMLEARN')
+"""
+    res = subprocess.run(
+        [sys.executable, "-c", code],
+        capture_output=True,
+        text=True,
+    )
+    assert res.returncode == 0, f"App execution failed without hmmlearn:\n{res.stderr}\n{res.stdout}"
+    assert "SUCCESS_NO_HMMLEARN" in res.stdout
+

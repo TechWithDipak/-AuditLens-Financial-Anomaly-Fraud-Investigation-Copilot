@@ -27,3 +27,10 @@ Mistake: Earlier implementations had hex codes dispersed across `app.py`, `src/r
 Root cause: Direct string styling without centralized constants.
 Fix: Exported palette constants from `src/config.py` and `.streamlit/config.toml` only, interpolating them into UI and report styles. Added automated WCAG 2.1 relative luminance and contrast ratio calculations in `tests/test_compliance.py`.
 Prevention rule: Define color tokens once at the configuration layer and enforce single-source-of-truth via static compliance tests.
+
+## 2026-11-16 | Decoupling Heavy Training Dependencies from Inference and Serving
+Learned: Top-level module imports of training-only packages (like `hmmlearn`) cause hard crashes at runtime if end users execute serving applications (`app.py`) in lightweight or production environments where training libraries are omitted.
+Mistake: Unconditionally importing `from hmmlearn.hmm import CategoricalHMM` in `src/hmm.py` and pickling `self.model` inside `CustomerHMM`.
+Root cause: Python evaluates module-level imports when `app.py` imports functions (`encode_discrete_symbols`), and standard `pickle` resolves class paths during unpickling.
+Fix: Made `hmmlearn` an optional training-time import with try-except fallback. Cached transition, emission, and start probability matrices directly as numpy arrays on `CustomerHMM`, setting `self.model = None` during serialization (`__getstate__`). Added dummy mock module registration in `sys.modules` for legacy pickle compatibility and a fallback instantiation in `app.py` from `metrics.json`.
+Prevention rule: For models evaluated with hand-written inference algorithms (Forward, Viterbi), store parameters purely in native numpy formats and keep training-time library imports strictly localized or conditional.

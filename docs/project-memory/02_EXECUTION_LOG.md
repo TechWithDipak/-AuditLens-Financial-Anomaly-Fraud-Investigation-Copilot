@@ -113,3 +113,25 @@ Commands:
 Deviations: None.
 Noticed (out of scope): None.
 Status: done
+
+## 2026-11-16 | Decouple HMM Runtime from hmmlearn Dependency | size: small
+Plan:
+1. Make `src/hmm.py` tolerate environments where `hmmlearn` is not installed.
+2. Fall back to mock modules in `sys.modules` (`hmmlearn`, `hmmlearn.base`, `hmmlearn.hmm`) so that any unpickling of legacy artifacts succeeds without `ModuleNotFoundError`.
+3. Store numpy parameter matrices directly on `CustomerHMM` (`_startprob`, `_transmat`, `_emissionprob`), stripping the `hmmlearn.hmm.CategoricalHMM` instance during serialization (`__getstate__`).
+4. Re-save `artifacts/hmm_model.joblib` using pure numpy attributes to decouple it from `hmmlearn`.
+5. Update `app.py`'s `load_cached_artifacts()` to gracefully catch load issues and fallback to `CustomerHMM.from_matrices` using `metrics.json`'s saved `hmm_matrices`.
+6. Add unit tests for `CustomerHMM` inference and `app.py` execution in environments where `hmmlearn` is blocked.
+Changes:
+- `src/hmm.py`: Wrapped `CategoricalHMM` import in try-except with dummy fallback modules in `sys.modules`, cached numpy parameter matrices on `CustomerHMM`, decoupled serialization state (`state['model'] = None`), and provided `CustomerHMM.from_matrices`.
+- `app.py`: Made `load_cached_artifacts` fault-tolerant and added fallback initialization of `CustomerHMM` from `metrics['hmm_matrices']`.
+- `tests/test_hmm.py`: Added `test_customer_hmm_from_matrices_and_inference_without_hmmlearn` and `test_import_src_hmm_when_hmmlearn_missing`.
+- `tests/test_app.py`: Added `test_app_runs_in_environment_without_hmmlearn`.
+- `artifacts/hmm_model.joblib`: Re-serialized without `CategoricalHMM` instance.
+Commands:
+- `.venv/bin/pytest -v tests/test_hmm.py` -> 6 passed in 1.55s
+- `.venv/bin/pytest -v tests/test_app.py` -> 6 passed in 4.09s
+- `.venv/bin/pytest -v` -> 25 passed in 5.48s
+Deviations: Added `_AutoMockModule` handling for `__file__` and dunder attribute lookups to prevent Python's `inspect` module from raising attribute errors during Streamlit script execution.
+Noticed (out of scope): None.
+Status: done

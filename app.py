@@ -37,6 +37,7 @@ from src.explain import format_inr, TransactionExplainer
 from src.report import generate_html_report
 from src.em_gmm import HandWrittenGMM
 from src.hmm import (
+    CustomerHMM,
     encode_discrete_symbols,
 )
 
@@ -396,7 +397,10 @@ def load_cached_artifacts():
     }
     for k, p in paths.items():
         if p.exists():
-            loaded_artifacts[k] = joblib.load(p)
+            try:
+                loaded_artifacts[k] = joblib.load(p)
+            except Exception:
+                pass
     return loaded_artifacts
 
 
@@ -413,6 +417,16 @@ if not metrics or test_df.empty:
     st.stop()
 
 artifacts = load_cached_artifacts()
+if "hmm_model" not in artifacts and "hmm_matrices" in metrics:
+    try:
+        m_data = metrics["hmm_matrices"]
+        artifacts["hmm_model"] = CustomerHMM.from_matrices(
+            startprob=np.array(m_data["startprob"], dtype=float),
+            transmat=np.array(m_data["transmat"], dtype=float),
+            emissionprob=np.array(m_data["emissionprob"], dtype=float),
+        )
+    except Exception:
+        pass
 tuned_threshold = float(metrics.get("tuned_threshold", 0.50))
 suspicious_threshold = float(metrics.get("threshold_suspicious", 0.20))
 selected_model_name = metrics.get("selected_model", "XGBoost")
